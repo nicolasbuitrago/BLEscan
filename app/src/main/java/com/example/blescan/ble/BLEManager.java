@@ -28,6 +28,7 @@ import java.util.List;
 public class BLEManager extends ScanCallback {
     BLEManagerCallerInterface caller;
     Context context;
+    private LogBLE log;
 
     BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
@@ -37,10 +38,9 @@ public class BLEManager extends ScanCallback {
     public BLEManager(BLEManagerCallerInterface caller, Context context) {
         this.caller = caller;
         this.context = context;
+        this.log = LogBLE.getInstance();
         initializeBluetoothManager();
     }
-
-
 
     public void initializeBluetoothManager(){
         try{
@@ -239,8 +239,125 @@ public class BLEManager extends ScanCallback {
                 }
             });
         }catch (Exception error){
+            this.log.add(LogBLE.ERROR+error.getMessage());
+        }
+    }
+
+    public static boolean CheckIfBLEIsSupportedOrNot(Context context){
+        try {
+            return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+        }catch (Exception error){
+            LogBLE.getInstance().add(LogBLE.ERROR+error.getMessage());
+        }
+        return false;
+    }
+
+    public static boolean RequestBluetoothDeviceEnable(final Activity activity){
+        try{
+            BluetoothManager bluetoothManager=(BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
+            BluetoothAdapter bluetoothAdapter=bluetoothManager.getAdapter();
+            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+                AlertDialog.Builder builder=new AlertDialog.Builder(activity)
+                        .setTitle("Bluetooth")
+                        .setMessage("The bluetooth device must be enabled in order to connect the device")
+                        .setIcon(R.mipmap.bt_blue)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                                activity.startActivityForResult(enableBtIntent, REQUEST_BLUETOOTH_PERMISSION_NEEDED);
+                            }
+                        });
+                builder.show();
+
+            }else {
+                return true;
+            }
+        }catch (Exception error){
 
         }
+        return false;
+    }
+
+    public boolean isCharacteristicWriteable(BluetoothGattCharacteristic characteristic) {
+        return (characteristic.getProperties() &
+                (BluetoothGattCharacteristic.PROPERTY_WRITE
+                        | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) != 0;
+    }
+
+    public boolean isCharacteristicReadable(BluetoothGattCharacteristic characteristic) {
+        return ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0);
+    }
+
+    public boolean isCharacteristicNotifiable(BluetoothGattCharacteristic characteristic) {
+        return ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0);
+    }
+
+    private void searchAndSetAllNotifyAbleCharacteristics() {
+        try {
+
+            if(lastBluetoothGatt!=null){
+                for(BluetoothGattService currentService: lastBluetoothGatt.getServices()){
+                    if(currentService!=null){
+                        for(BluetoothGattCharacteristic currentCharacteristic:currentService.getCharacteristics()){
+                            if(currentCharacteristic!=null){
+                                if(isCharacteristicNotifiable(currentCharacteristic)){
+                                    lastBluetoothGatt.setCharacteristicNotification(currentCharacteristic, true);
+                                    for(BluetoothGattDescriptor currentDescriptor:currentCharacteristic.getDescriptors()){
+                                        if(currentDescriptor!=null){
+                                            try {
+                                                currentDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                                                lastBluetoothGatt.writeDescriptor(currentDescriptor);
+                                            }catch (Exception internalError){
+                                                for (BluetoothHelperCallerInterface current:callers
+                                                ) {
+                                                    current.bluetoothHelperErrorThrown(internalError);
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception error){
+            for (BluetoothHelperCallerInterface current:callers
+            ) {
+                current.bluetoothHelperErrorThrown(error);
+            }
+        }
+
+    }
+
+    public boolean readCharacteristic(BluetoothGattCharacteristic characteristic){
+        try{
+            if(characteristic==null) return false;
+            return lastBluetoothGatt.readCharacteristic(characteristic);
+        }catch (Exception error){
+            for (BluetoothHelperCallerInterface current:callers
+            ) {
+                current.bluetoothHelperErrorThrown(error);
+            }
+        }
+        return false;
+    }
+
+    public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic,byte[] data){
+        try{
+            if(characteristic==null) return false;
+            characteristic.setValue(data);
+            return lastBluetoothGatt.writeCharacteristic(characteristic);
+        }catch (Exception error){
+
+            for (BluetoothHelperCallerInterface current:callers
+            ) {
+                current.bluetoothHelperErrorThrown(error);
+            }
+        }
+        return false;
     }
 
 }
