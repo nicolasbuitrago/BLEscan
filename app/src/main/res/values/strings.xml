@@ -8,4 +8,7 @@
     <string name="bluetooth_status">Bluetooth status</string>
     <string name="status_turning_off">Turning off</string>
     <string name="status_turning_on">Turning on</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

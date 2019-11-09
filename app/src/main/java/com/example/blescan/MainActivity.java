@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.example.blescan.adapters.BluetoothListAdapter;
@@ -18,11 +19,14 @@ import com.example.blescan.ble.IBLEManagerCaller;
 import com.example.blescan.ble.BLEService;
 import com.example.blescan.broadcast.BroadcastManager;
 import com.example.blescan.broadcast.IBroadcastManagerCaller;
+import com.example.blescan.fragments.DeviceList;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.view.View;
 import android.view.Menu;
@@ -33,13 +37,14 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements IBroadcastManagerCaller {
+public class MainActivity extends AppCompatActivity implements IBroadcastManagerCaller, DeviceList.OnFragmentInteractionListener {
 
     private MainActivity mainActivity;
     private BroadcastManager broadcastBLE;
     private BroadcastReceiver bluetoothReceiver;
     private boolean bluetoothEnabled;
     private TextView bluetoothStatusTextView;
+    private DeviceList devicesFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +77,13 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
         bluetoothStatusTextView = (TextView) findViewById(R.id.status_bluetooth_text);
         setBluetoothStatus(BLEManager.RequestBluetoothDeviceEnable(this));
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        devicesFragment = new DeviceList();
+        fragmentTransaction.add(R.id.fragment_container, devicesFragment);
+        fragmentTransaction.commit();
 
         mainActivity=this;
         initializeBroadcastManager();
@@ -178,6 +190,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             }catch (Exception e){
                 e.printStackTrace();
             }
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -285,5 +298,10 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         }
         unregisterReceiver(bluetoothReceiver);
         super.onDestroy();
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
     }
 }
