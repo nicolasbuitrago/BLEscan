@@ -2,12 +2,16 @@ package com.example.blescan.ble;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -22,10 +26,14 @@ import android.provider.Settings;
 
 import androidx.core.content.ContextCompat;
 
+import com.example.blescan.MainActivity;
+import com.example.blescan.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class BLEManager extends ScanCallback {
+
     BLEManagerCallerInterface caller;
     Context context;
     private LogBLE log;
@@ -35,6 +43,10 @@ public class BLEManager extends ScanCallback {
     private BluetoothLeScanner bluetoothLeScanner;
     public List<ScanResult> scanResults=new ArrayList<>();
 
+    public static String TAG = BLEManager.class.getName();
+    public static int REQUEST_BLUETOOTH_PERMISSION_NEEDED = 1027;
+    private BluetoothGatt lastBluetoothGatt;
+
     public BLEManager(BLEManagerCallerInterface caller, Context context) {
         this.caller = caller;
         this.context = context;
@@ -42,12 +54,12 @@ public class BLEManager extends ScanCallback {
         initializeBluetoothManager();
     }
 
-    public void initializeBluetoothManager(){
+    private void initializeBluetoothManager(){
         try{
             bluetoothManager=(BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
             this.bluetoothAdapter=bluetoothManager.getAdapter();
         }catch (Exception error){
-
+            this.log.add(TAG,"initialize. "+error.getMessage());
         }
     }
 
@@ -55,7 +67,7 @@ public class BLEManager extends ScanCallback {
         try{
             return bluetoothManager.getAdapter().isEnabled();
         }catch (Exception error){
-
+            this.log.add(TAG,"isBluetoothOn. "+error.getMessage());
         }
         return false;
     }
@@ -102,7 +114,7 @@ public class BLEManager extends ScanCallback {
 
             }
         }catch (Exception error){
-
+            this.log.add(TAG,"requestLocationPermissions. "+error.getMessage());
         }
 
     }
@@ -114,7 +126,7 @@ public class BLEManager extends ScanCallback {
                 activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
         }catch (Exception error){
-
+            this.log.add(TAG,"enableBluetoothDevice. "+error.getMessage());
         }
     }
 
@@ -127,7 +139,7 @@ public class BLEManager extends ScanCallback {
             bluetoothLeScanner.startScan(this);
             caller.scanStartedSuccessfully();
         }catch (Exception error){
-
+            this.log.add(TAG,"scan devices. "+error.getMessage());
         }
     }
 
@@ -172,7 +184,7 @@ public class BLEManager extends ScanCallback {
 
     public void connectToGATTServer(BluetoothDevice device){
         try{
-            device.connectGatt(this.context, false, new BluetoothGattCallback() {
+            this.lastBluetoothGatt =  device.connectGatt(this.context, false, new BluetoothGattCallback() {
                 @Override
                 public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
                     super.onPhyUpdate(gatt, txPhy, rxPhy, status);
@@ -239,7 +251,7 @@ public class BLEManager extends ScanCallback {
                 }
             });
         }catch (Exception error){
-            this.log.add(LogBLE.ERROR+error.getMessage());
+            this.log.add(TAG,LogBLE.ERROR+error.getMessage());
         }
     }
 
@@ -247,7 +259,7 @@ public class BLEManager extends ScanCallback {
         try {
             return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
         }catch (Exception error){
-            LogBLE.getInstance().add(LogBLE.ERROR+error.getMessage());
+            LogBLE.getInstance().add(TAG, LogBLE.ERROR+error.getMessage());
         }
         return false;
     }
@@ -260,7 +272,7 @@ public class BLEManager extends ScanCallback {
                 AlertDialog.Builder builder=new AlertDialog.Builder(activity)
                         .setTitle("Bluetooth")
                         .setMessage("The bluetooth device must be enabled in order to connect the device")
-                        .setIcon(R.mipmap.bt_blue)
+                        .setIcon(R.mipmap.ic_launcher_round)
                         .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -274,7 +286,7 @@ public class BLEManager extends ScanCallback {
                 return true;
             }
         }catch (Exception error){
-
+            LogBLE.getInstance().add(TAG,"RequestBluetoothDeviceEnable. "+error.getMessage());
         }
         return false;
     }
@@ -309,10 +321,11 @@ public class BLEManager extends ScanCallback {
                                                 currentDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                                                 lastBluetoothGatt.writeDescriptor(currentDescriptor);
                                             }catch (Exception internalError){
-                                                for (BluetoothHelperCallerInterface current:callers
+                                                /*for (BluetoothHelperCallerInterface current:callers
                                                 ) {
                                                     current.bluetoothHelperErrorThrown(internalError);
-                                                }
+                                                }*/
+                                                this.log.add(TAG,"searchAndSetAllNotifyAbleCharacteristics. "+internalError.getMessage());
                                             }
                                         }
                                     }
@@ -324,10 +337,11 @@ public class BLEManager extends ScanCallback {
                 }
             }
         } catch (Exception error){
-            for (BluetoothHelperCallerInterface current:callers
+            /*for (BluetoothHelperCallerInterface current:callers
             ) {
                 current.bluetoothHelperErrorThrown(error);
-            }
+            }*/
+            this.log.add(TAG,"searchAndSetAllNotifyAbleCharacteristics. "+error.getMessage());
         }
 
     }
@@ -337,10 +351,11 @@ public class BLEManager extends ScanCallback {
             if(characteristic==null) return false;
             return lastBluetoothGatt.readCharacteristic(characteristic);
         }catch (Exception error){
-            for (BluetoothHelperCallerInterface current:callers
+            /*for (BluetoothHelperCallerInterface current:callers
             ) {
                 current.bluetoothHelperErrorThrown(error);
-            }
+            }*/
+            this.log.add(TAG,"readCharacteristic. "+error.getMessage());
         }
         return false;
     }
@@ -352,10 +367,11 @@ public class BLEManager extends ScanCallback {
             return lastBluetoothGatt.writeCharacteristic(characteristic);
         }catch (Exception error){
 
-            for (BluetoothHelperCallerInterface current:callers
+            /*for (BluetoothHelperCallerInterface current:callers
             ) {
                 current.bluetoothHelperErrorThrown(error);
-            }
+            }*/
+            this.log.add(TAG,"writeCharacteristic. "+error.getMessage());
         }
         return false;
     }

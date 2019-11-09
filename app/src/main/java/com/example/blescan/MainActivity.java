@@ -2,6 +2,9 @@ package com.example.blescan;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -155,4 +158,5 @@ public class MainActivity extends AppCompatActivity implements BLEManagerCallerI
         });
 
     }
+
 }
