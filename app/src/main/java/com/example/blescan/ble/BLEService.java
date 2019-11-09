@@ -17,7 +17,7 @@ import com.example.blescan.R;
 public class BLEService extends Service {
 
     // Constants
-    private static final int ID_SERVICE = 101;
+    private static final int ID_SERVICE = 1337;
 
     public BLEService() {
     }
@@ -49,8 +49,8 @@ public class BLEService extends Service {
 
     //@RequiresApi(Build.VERSION_CODES.O)
     private String createNotificationChannel(NotificationManager notificationManager){
-        String channelId = "my_service_channelid";
-        String channelName = "My Foreground Service";
+        String channelId = "ble";
+        String channelName = "BLEscan channel";
         NotificationChannel channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH);
         // omitted the LED color
         channel.setImportance(NotificationManager.IMPORTANCE_NONE);

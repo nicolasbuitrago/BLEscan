@@ -293,8 +293,7 @@ public class BLEManager extends ScanCallback {
 
     public boolean isCharacteristicWriteable(BluetoothGattCharacteristic characteristic) {
         return (characteristic.getProperties() &
-                (BluetoothGattCharacteristic.PROPERTY_WRITE
-                        | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) != 0;
+                (BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) != 0;
     }
 
     public boolean isCharacteristicReadable(BluetoothGattCharacteristic characteristic) {

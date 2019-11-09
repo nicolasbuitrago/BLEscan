@@ -14,6 +14,7 @@ import android.os.Bundle;
 import com.example.blescan.adapters.BluetoothListAdapter;
 import com.example.blescan.ble.BLEManager;
 import com.example.blescan.ble.BLEManagerCallerInterface;
+import com.example.blescan.ble.BLEService;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements BLEManagerCallerI
             bleManager.requestLocationPermissions(this,1002);
         }
         mainActivity=this;
+
     }
 
     @Override
@@ -72,6 +74,12 @@ public class MainActivity extends AppCompatActivity implements BLEManagerCallerI
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            try {
+                Intent intent = new Intent(getApplicationContext(), BLEService.class);
+                startService(intent);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
             return true;
         }
 
