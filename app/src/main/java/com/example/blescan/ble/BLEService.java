@@ -7,18 +7,35 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
 import com.example.blescan.R;
+import com.example.blescan.broadcast.BroadcastManager;
+import com.example.blescan.broadcast.IBroadcastManagerCaller;
 
-public class BLEService extends Service implements IBLEManagerCaller {
+public class BLEService extends Service implements IBLEManagerCaller, IBroadcastManagerCaller {
+
+    public static String TAG = BLEService.class.getName();
+
+    public static String CHANNEL = "com.example.blescan.ble.BLEService";
+
+    public static String TYPE_SCAN_DEVICES= "com.example.blescan.ble.BLEService.type.TYPE_SCAN_DEVICES";
+    public static String TYPE_NEW_DEVICE= "com.example.blescan.ble.BLEService.type.TYPE_NEW_DEVICE";
+    public static String TYPE_NEW_NOTIFICATION= "com.example.blescan.ble.BLEService.type.TYPE_NEW_NOTIFICATION";
+
+    public static String EXTRA_DEVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_DEVICES";
 
     private static final int ID_SERVICE = 1337;
 
-    public BLEService() {
-    }
+    private  BLEManager bleManager;
+    private BroadcastManager broadcastManager;
+    private LogBLE log;
+
+    public BLEService() { }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -31,6 +48,9 @@ public class BLEService extends Service implements IBLEManagerCaller {
         super.onCreate();
 
         // do stuff like register for BroadcastReceiver, etc.
+        this.log = LogBLE.getInstance();
+        initializeBroadcastManager();
+        bleManager = new BLEManager(this,getApplicationContext());
 
         // Create the Foreground Service
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -46,6 +66,16 @@ public class BLEService extends Service implements IBLEManagerCaller {
                 .build();
 
         startForeground(ID_SERVICE, notification);
+    }
+
+    public void initializeBroadcastManager(){
+        try{
+            if(broadcastManager==null){
+                broadcastManager=new BroadcastManager(getApplicationContext(), BLEService.CHANNEL, this);
+            }
+        }catch (Exception error){
+            this.log.add(TAG,"initializeBroadcastManager. ");
+        }
     }
 
     //@RequiresApi(Build.VERSION_CODES.O)
@@ -69,6 +99,9 @@ public class BLEService extends Service implements IBLEManagerCaller {
 
     @Override
     public void onDestroy() {
+        if(broadcastManager!=null){
+            broadcastManager.unRegister();
+        }
         super.onDestroy();
     }
 
@@ -89,6 +122,20 @@ public class BLEService extends Service implements IBLEManagerCaller {
 
     @Override
     public void newDeviceDetected() {
+        Bundle args = new Bundle();
+        args.putParcelableArrayList(EXTRA_DEVICES,bleManager.scanResults);
+        this.broadcastManager.sendBroadcast(TYPE_NEW_DEVICE,args);
+    }
 
+    @Override
+    public void MessageReceivedThroughBroadcastManager(String channel, String type, Bundle args) {
+        if(TYPE_SCAN_DEVICES.equals(type)){
+            this.bleManager.scanDevices();
+        }
+    }
+
+    @Override
+    public void ErrorAtBroadcastManager(Exception error) {
+        this.log.add(TAG,"ErrorAtBroadcastManager. "+error.getMessage());
     }
 }

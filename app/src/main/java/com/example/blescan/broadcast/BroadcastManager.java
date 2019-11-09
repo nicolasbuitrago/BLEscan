@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 
 public class BroadcastManager extends BroadcastReceiver {
 
@@ -40,16 +41,16 @@ public class BroadcastManager extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        String payload=intent.getExtras().getString("payload");
+        Bundle payload=intent.getExtras().getBundle("payload");
         String type=intent.getExtras().getString("type");
         caller.MessageReceivedThroughBroadcastManager(this.channel,type,payload);
     }
 
-    public void sendBroadcast(String type,String message){
+    public void sendBroadcast(String type, Bundle args){
         try{
             Intent intentToBeSent=new Intent();
             intentToBeSent.setAction(channel);
-            intentToBeSent.putExtra("payload",message);
+            intentToBeSent.putExtra("payload",args);
             intentToBeSent.putExtra("type",type);
             context.sendBroadcast(intentToBeSent);
         }catch (Exception error){

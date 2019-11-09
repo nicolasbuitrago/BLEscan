@@ -15,14 +15,14 @@ import androidx.annotation.NonNull;
 import com.example.blescan.MainActivity;
 import com.example.blescan.R;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class BluetoothListAdapter extends ArrayAdapter<ScanResult> {
     private final Context context;
     private MainActivity mainActivity;
-    private List<ScanResult> scanResultList;
+    private ArrayList<ScanResult> scanResultList;
 
-    public BluetoothListAdapter(@NonNull Context context, List<ScanResult> scanResultList, MainActivity mainActivity) {
+    public BluetoothListAdapter(@NonNull Context context, ArrayList<ScanResult> scanResultList, MainActivity mainActivity) {
         super(context, R.layout.device_list_item,scanResultList);
         this.context = context;
         this.mainActivity=mainActivity;
@@ -46,7 +46,7 @@ public class BluetoothListAdapter extends ArrayAdapter<ScanResult> {
             public void onClick(View view) {
                 String address=((TextView) view.findViewById(R.id.device_list_item_text_view)).getText()+"";
                 Toast.makeText(context,"selected address: "+address,Toast.LENGTH_LONG).show();
-                mainActivity.bleManager.connectToGATTServer(mainActivity.bleManager.getByAddress(address));
+                //mainActivity.bleManager.connectToGATTServer(mainActivity.bleManager.getByAddress(address));
             }
         });
 

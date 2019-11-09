@@ -2,6 +2,7 @@ package com.example.blescan;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.le.ScanResult;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,6 +12,8 @@ import com.example.blescan.adapters.BluetoothListAdapter;
 import com.example.blescan.ble.BLEManager;
 import com.example.blescan.ble.IBLEManagerCaller;
 import com.example.blescan.ble.BLEService;
+import com.example.blescan.broadcast.BroadcastManager;
+import com.example.blescan.broadcast.IBroadcastManagerCaller;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.annotation.NonNull;
@@ -21,11 +24,15 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements IBLEManagerCaller {
+import java.util.ArrayList;
 
-    public BLEManager bleManager;
+public class MainActivity extends AppCompatActivity implements IBroadcastManagerCaller {
+
     private MainActivity mainActivity;
+    private BroadcastManager broadcastBLE;
+    private boolean bluetoothEnabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,19 +45,38 @@ public class MainActivity extends AppCompatActivity implements IBLEManagerCaller
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(bleManager!=null){
-                    bleManager.scanDevices();
-                }
+                broadcastBLE.sendBroadcast(BLEService.TYPE_SCAN_DEVICES,null);
             }
         });
-        bleManager=new BLEManager(this,this);
-        if(!bleManager.isBluetoothOn()){
-            bleManager.enableBluetoothDevice(this, 1001);
-        }else{
-            bleManager.requestLocationPermissions(this,1002);
-        }
-        mainActivity=this;
 
+        boolean bleSupported = BLEManager.CheckIfBLEIsSupportedOrNot(getApplicationContext());
+        if(!bleSupported){
+            AlertDialog.Builder builder=new AlertDialog.Builder(this)
+                    .setTitle("Bluetooth LE")
+                    .setMessage("Bluetooth LE is not supported.")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
+            builder.show();
+        }
+
+        bluetoothEnabled = BLEManager.RequestBluetoothDeviceEnable(this);
+
+        mainActivity=this;
+        initializeBroadcastManager();
+    }
+
+    public void initializeBroadcastManager(){
+        try{
+            if(broadcastBLE==null){
+                broadcastBLE=new BroadcastManager(getApplicationContext(), BLEService.CHANNEL, this);
+            }
+        }catch (Exception error){
+            Toast.makeText(this,error.getMessage(),Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -96,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements IBLEManagerCaller
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         boolean allPermissionsGranted=true;
-        if (requestCode == 1002) {
+        if (requestCode == BLEManager.REQUEST_BLUETOOTH_PERMISSION_NEEDED) {
             for (int currentResult:grantResults
             ) {
                 if(currentResult!= PackageManager.PERMISSION_GRANTED){
@@ -107,11 +133,11 @@ public class MainActivity extends AppCompatActivity implements IBLEManagerCaller
             if(!allPermissionsGranted){
                 AlertDialog.Builder builder=new AlertDialog.Builder(this)
                         .setTitle("Permissions")
-                        .setMessage("Camera and Location permissions must be granted in order to execute the app")
+                        .setMessage("Bluetooth and Location permissions must be granted in order to execute the app")
                         .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                finish();
+                                mainActivity.finish();
                             }
                         });
                 builder.show();
@@ -123,53 +149,64 @@ public class MainActivity extends AppCompatActivity implements IBLEManagerCaller
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         try{
-
-            if(requestCode==1001){
-                if(resultCode!= Activity.RESULT_OK){
-
-                }else{
-                    bleManager.requestLocationPermissions(this,1002);
-
+            if(requestCode==BLEManager.REQUEST_BLUETOOTH_PERMISSION_NEEDED){
+                if(resultCode== Activity.RESULT_OK){
+                    BLEManager.requestLocationPermissions(this,getApplicationContext());
                 }
             }
-
-
         }catch (Exception error){
 
         }
     }
 
     @Override
-    public void scanStartedSuccessfully() {
+    public void MessageReceivedThroughBroadcastManager(String channel, String type, Bundle args) {
+        if(BLEService.CHANNEL.equals(channel)){
+            if(BLEService.TYPE_NEW_DEVICE.equals(type)){
+                final ArrayList<ScanResult> scanResults = args.getParcelableArrayList(BLEService.EXTRA_DEVICES);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            ListView listView=(ListView)findViewById(R.id.devices_list_id);
+                            BluetoothListAdapter adapter=new BluetoothListAdapter(getApplicationContext(),scanResults, mainActivity);
+                            listView.setAdapter(adapter);
+                        }catch (Exception error){
 
+                        }
+
+                    }
+                });
+            }
+        }
     }
 
     @Override
-    public void scanStoped() {
-
-    }
-
-    @Override
-    public void scanFailed(int error) {
-
-    }
-
-    @Override
-    public void newDeviceDetected() {
+    public void ErrorAtBroadcastManager(final Exception error) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                try{
-                    ListView listView=(ListView)findViewById(R.id.devices_list_id);
-                    BluetoothListAdapter adapter=new BluetoothListAdapter(getApplicationContext(),bleManager.scanResults,mainActivity);
-                    listView.setAdapter(adapter);
-                }catch (Exception error){
-
-                }
-
+                androidx.appcompat.app.AlertDialog.Builder builder=
+                        new androidx.appcompat.app.AlertDialog.
+                                Builder(MainActivity.this);
+                builder.setTitle("BM Error")
+                        .setMessage(error.getMessage())
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //TODO
+                            }
+                        });
+                builder.show();
             }
         });
-
     }
 
+    @Override
+    protected void onDestroy() {
+        if(broadcastBLE!=null){
+            this.broadcastBLE.unRegister();
+        }
+        super.onDestroy();
+    }
 }

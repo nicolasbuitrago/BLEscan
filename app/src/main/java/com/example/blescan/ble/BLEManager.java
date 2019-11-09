@@ -30,22 +30,24 @@ import java.util.List;
 
 public class BLEManager extends ScanCallback {
 
-    IBLEManagerCaller caller;
-    Context context;
+    private IBLEManagerCaller caller;
+    private Context context;
     private LogBLE log;
 
-    BluetoothManager bluetoothManager;
+    private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
-    public List<ScanResult> scanResults=new ArrayList<>();
+    public ArrayList<ScanResult> scanResults;
 
     public static String TAG = BLEManager.class.getName();
     public static int REQUEST_BLUETOOTH_PERMISSION_NEEDED = 1027;
+    public static int REQUEST_LOCATION_PERMISSION_NEEDED = 1028;
     private BluetoothGatt lastBluetoothGatt;
 
     public BLEManager(IBLEManagerCaller caller, Context context) {
         this.caller = caller;
         this.context = context;
+        this.scanResults=new ArrayList<>();
         this.log = LogBLE.getInstance();
         initializeBluetoothManager();
     }
@@ -68,7 +70,44 @@ public class BLEManager extends ScanCallback {
         return false;
     }
 
-    public void requestLocationPermissions(final Activity activity,int REQUEST_CODE){
+
+    public static boolean CheckIfBLEIsSupportedOrNot(Context context){
+        try {
+            return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+        }catch (Exception error){
+            LogBLE.getInstance().add(TAG, LogBLE.ERROR+error.getMessage());
+        }
+        return false;
+    }
+
+    public static boolean RequestBluetoothDeviceEnable(final Activity activity){
+        try{
+            BluetoothManager bluetoothManager=(BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
+            BluetoothAdapter bluetoothAdapter=bluetoothManager.getAdapter();
+            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+                AlertDialog.Builder builder=new AlertDialog.Builder(activity)
+                        .setTitle("Bluetooth")
+                        .setMessage("The bluetooth device must be enabled in order to connect the device")
+                        //.setIcon(R.mipmap.ic_launcher_round)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                                activity.startActivityForResult(enableBtIntent, REQUEST_BLUETOOTH_PERMISSION_NEEDED);
+                            }
+                        });
+                builder.show();
+
+            }else {
+                return true;
+            }
+        }catch (Exception error){
+            LogBLE.getInstance().add(TAG,"RequestBluetoothDeviceEnable. "+error.getMessage());
+        }
+        return false;
+    }
+
+    public static void requestLocationPermissions(final Activity activity, final Context context){
         try{
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
@@ -102,31 +141,18 @@ public class BLEManager extends ScanCallback {
                     builder.create().show();
                 }
             }
-            if (ContextCompat.checkSelfPermission(this.context.getApplicationContext(),
+            if (ContextCompat.checkSelfPermission(context,
                     android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             } else {
                 activity.requestPermissions( new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_CODE);
+                        REQUEST_LOCATION_PERMISSION_NEEDED);
 
             }
         }catch (Exception error){
-            this.log.add(TAG,"requestLocationPermissions. "+error.getMessage());
+            LogBLE.getInstance().add(TAG,"requestLocationPermissions. "+error.getMessage());
         }
 
     }
-
-    public void enableBluetoothDevice(Activity activity,int REQUEST_ENABLE_BT){
-        try{
-            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
-        }catch (Exception error){
-            this.log.add(TAG,"enableBluetoothDevice. "+error.getMessage());
-        }
-    }
-
-
 
     public void scanDevices(){
         try{
@@ -145,7 +171,6 @@ public class BLEManager extends ScanCallback {
             scanResults.add(result);
         }
         caller.newDeviceDetected();
-
     }
 
     @Override
@@ -158,7 +183,7 @@ public class BLEManager extends ScanCallback {
         caller.scanFailed(errorCode);
     }
 
-    public boolean isResultAlreadyAtList(ScanResult newResult){
+    private boolean isResultAlreadyAtList(ScanResult newResult){
         for (ScanResult current : scanResults){
             if(current.getDevice().getAddress().equals(newResult.getDevice().getAddress())){
                 return true;
@@ -249,42 +274,6 @@ public class BLEManager extends ScanCallback {
         }catch (Exception error){
             this.log.add(TAG,LogBLE.ERROR+error.getMessage());
         }
-    }
-
-    public static boolean CheckIfBLEIsSupportedOrNot(Context context){
-        try {
-            return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
-        }catch (Exception error){
-            LogBLE.getInstance().add(TAG, LogBLE.ERROR+error.getMessage());
-        }
-        return false;
-    }
-
-    public static boolean RequestBluetoothDeviceEnable(final Activity activity){
-        try{
-            BluetoothManager bluetoothManager=(BluetoothManager) activity.getSystemService(Context.BLUETOOTH_SERVICE);
-            BluetoothAdapter bluetoothAdapter=bluetoothManager.getAdapter();
-            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-                AlertDialog.Builder builder=new AlertDialog.Builder(activity)
-                        .setTitle("Bluetooth")
-                        .setMessage("The bluetooth device must be enabled in order to connect the device")
-                        .setIcon(R.mipmap.ic_launcher_round)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                                activity.startActivityForResult(enableBtIntent, REQUEST_BLUETOOTH_PERMISSION_NEEDED);
-                            }
-                        });
-                builder.show();
-
-            }else {
-                return true;
-            }
-        }catch (Exception error){
-            LogBLE.getInstance().add(TAG,"RequestBluetoothDeviceEnable. "+error.getMessage());
-        }
-        return false;
     }
 
     public boolean isCharacteristicWriteable(BluetoothGattCharacteristic characteristic) {
