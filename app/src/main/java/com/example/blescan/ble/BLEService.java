@@ -14,9 +14,8 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.blescan.R;
 
-public class BLEService extends Service {
+public class BLEService extends Service implements BLEManagerCallerInterface{
 
-    // Constants
     private static final int ID_SERVICE = 1337;
 
     public BLEService() {
@@ -72,5 +71,25 @@ public class BLEService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    public void scanStartedSuccessfully() {
+        
+    }
+
+    @Override
+    public void scanStoped() {
+
+    }
+
+    @Override
+    public void scanFailed(int error) {
+
+    }
+
+    @Override
+    public void newDeviceDetected() {
+
     }
 }

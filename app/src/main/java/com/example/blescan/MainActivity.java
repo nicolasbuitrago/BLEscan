@@ -74,6 +74,9 @@ public class MainActivity extends AppCompatActivity implements BLEManagerCallerI
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+
+            return true;
+        }else if(id == R.id.action_start_service){
             try {
                 Intent intent = new Intent(getApplicationContext(), BLEService.class);
                 startService(intent);
@@ -81,6 +84,13 @@ public class MainActivity extends AppCompatActivity implements BLEManagerCallerI
                 e.printStackTrace();
             }
             return true;
+        }else if(id == R.id.action_stop_service){
+            try {
+                Intent intent = new Intent(getApplicationContext(), BLEService.class);
+                stopService(intent);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
 
         return super.onOptionsItemSelected(item);
