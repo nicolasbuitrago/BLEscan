@@ -185,8 +185,11 @@ public class BLEManager extends ScanCallback {
     }
 
     private boolean isResultAlreadyAtList(ScanResult newResult){
-        for (ScanResult current : scanResults){
+        for (int i = 0; i < scanResults.size(); i++) {
+            ScanResult current = scanResults.get(i);
             if(current.getDevice().getAddress().equals(newResult.getDevice().getAddress())){
+                scanResults.remove(i);
+                scanResults.add(i,newResult);
                 return true;
             }
         }
