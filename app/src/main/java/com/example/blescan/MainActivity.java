@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-
+            this.broadcastBLE.sendBroadcast(BLEService.TYPE_STOP_SCAN,null);
             return true;
         }else if(id == R.id.action_start_service){
             try {
@@ -226,6 +226,12 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         }
     }
 
+    public void connectGATT(String address){
+        Bundle args = new Bundle();
+        args.putString(BLEService.EXTRA_ADDRESS,address);
+        this.broadcastBLE.sendBroadcast(BLEService.TYPE_CONNECT_GATT,args);
+    }
+
     @Override
     public void MessageReceivedThroughBroadcastManager(String channel, String type, Bundle args) {
         if(BLEService.CHANNEL.equals(channel)){
@@ -241,9 +247,12 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                         }catch (Exception error){
 
                         }
-
                     }
                 });
+            } else if(BLEService.TYPE_CONNECTED_GATT.equals(type)){
+                Toast.makeText(this,"Connected",Toast.LENGTH_LONG).show();
+            } else if(BLEService.TYPE_DISCONNECTED_GATT.equals(type)){
+                Toast.makeText(this,"Disconnected",Toast.LENGTH_LONG).show();
             }
         }
     }

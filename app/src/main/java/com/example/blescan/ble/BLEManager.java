@@ -166,12 +166,23 @@ public class BLEManager extends ScanCallback {
         }
     }
 
+    public void stopScan(){
+        try{
+            bluetoothLeScanner=bluetoothAdapter.getBluetoothLeScanner();
+            bluetoothLeScanner.stopScan(this);
+        }catch (Exception error){
+            this.log.add(TAG,"stopScan. "+error.getMessage());
+        }
+    }
+
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
-        if(!isResultAlreadyAtList(result)) {
-            scanResults.add(result);
+        if(result != null) {
+            if (!isResultAlreadyAtList(result)) {
+                scanResults.add(result);
+            }
+            caller.newDeviceDetected();
         }
-        caller.newDeviceDetected();
     }
 
     @Override
@@ -226,6 +237,11 @@ public class BLEManager extends ScanCallback {
                     super.onConnectionStateChange(gatt, status, newState);
                     if(newState==BluetoothGatt.STATE_CONNECTED){
                         gatt.discoverServices();
+                        lastBluetoothGatt=gatt;
+                        caller.connectedGATT();
+                    }else if(newState == BluetoothGatt.STATE_DISCONNECTED){
+                        lastBluetoothGatt = null;
+                        caller.disconnectedGATT();
                     }
                 }
 

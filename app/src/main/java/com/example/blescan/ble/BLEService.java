@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
@@ -24,10 +23,15 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String CHANNEL = "com.example.blescan.ble.BLEService";
 
     public static String TYPE_SCAN_DEVICES= "com.example.blescan.ble.BLEService.type.TYPE_SCAN_DEVICES";
+    public static String TYPE_STOP_SCAN= "com.example.blescan.ble.BLEService.type.TYPE_STOP_SCAN";
     public static String TYPE_NEW_DEVICE= "com.example.blescan.ble.BLEService.type.TYPE_NEW_DEVICE";
+    public static String TYPE_CONNECT_GATT= "com.example.blescan.ble.BLEService.type.TYPE_CONNECT_GATT";
+    public static String TYPE_CONNECTED_GATT= "com.example.blescan.ble.BLEService.type.TYPE_CONNECTED_GATT";
+    public static String TYPE_DISCONNECTED_GATT= "com.example.blescan.ble.BLEService.type.TYPE_DISCONNECTED_GATT";
     public static String TYPE_NEW_NOTIFICATION= "com.example.blescan.ble.BLEService.type.TYPE_NEW_NOTIFICATION";
 
     public static String EXTRA_DEVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_DEVICES";
+    public static String EXTRA_ADDRESS= "com.example.blescan.ble.BLEService.extra.EXTRA_ADDRESS";
 
     private static final int ID_SERVICE = 1337;
 
@@ -102,6 +106,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         if(broadcastManager!=null){
             broadcastManager.unRegister();
         }
+
         super.onDestroy();
     }
 
@@ -128,9 +133,24 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     }
 
     @Override
+    public void connectedGATT() {
+        this.broadcastManager.sendBroadcast(TYPE_CONNECTED_GATT,null);
+    }
+
+    @Override
+    public void disconnectedGATT() {
+        this.broadcastManager.sendBroadcast(TYPE_DISCONNECTED_GATT,null);
+    }
+
+    @Override
     public void MessageReceivedThroughBroadcastManager(String channel, String type, Bundle args) {
         if(TYPE_SCAN_DEVICES.equals(type)){
             this.bleManager.scanDevices();
+        }else if(TYPE_STOP_SCAN.equals(type)){
+            this.bleManager.stopScan();
+        } else if(TYPE_CONNECT_GATT.equals(type)){
+            String address = args.getString(EXTRA_ADDRESS);
+            this.bleManager.connectToGATTServer(this.bleManager.getByAddress(address));
         }
     }
 

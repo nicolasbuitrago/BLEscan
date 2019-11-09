@@ -6,5 +6,7 @@ public interface IBLEManagerCaller {
     void scanStoped();
     void scanFailed(int error);
     void newDeviceDetected();
+    void connectedGATT();
+    void disconnectedGATT();
 
 }

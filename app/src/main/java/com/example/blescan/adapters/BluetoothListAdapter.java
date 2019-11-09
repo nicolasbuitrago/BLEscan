@@ -45,12 +45,23 @@ public class BluetoothListAdapter extends ArrayAdapter<ScanResult> {
         TextView signalTxtView = (TextView) rowView.findViewById(R.id.device_list_item_text_view3);
         signalTxtView.setText(signal);
 
-        txtTitle.setOnClickListener(new View.OnClickListener() {
+        /*txtTitle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String address=((TextView) view.findViewById(R.id.device_list_item_text_view)).getText()+"";
                 Toast.makeText(context,"selected address: "+address,Toast.LENGTH_LONG).show();
+                mainActivity.connectGATT(address);
                 //mainActivity.bleManager.connectToGATTServer(mainActivity.bleManager.getByAddress(address));
+            }
+        });*/
+
+        rowView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                String address=((TextView) view.findViewById(R.id.device_list_item_text_view)).getText()+"";
+                Toast.makeText(context,"selected address: "+address,Toast.LENGTH_LONG).show();
+                mainActivity.connectGATT(address);
+                return false;
             }
         });
 
