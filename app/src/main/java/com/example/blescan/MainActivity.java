@@ -2,9 +2,13 @@ package com.example.blescan;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanResult;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
@@ -24,6 +28,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -32,7 +37,9 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
     private MainActivity mainActivity;
     private BroadcastManager broadcastBLE;
+    private BroadcastReceiver bluetoothReceiver;
     private boolean bluetoothEnabled;
+    private TextView bluetoothStatusTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,10 +70,12 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             builder.show();
         }
 
-        bluetoothEnabled = BLEManager.RequestBluetoothDeviceEnable(this);
+        bluetoothStatusTextView = (TextView) findViewById(R.id.status_bluetooth_text);
+        setBluetoothStatus(BLEManager.RequestBluetoothDeviceEnable(this));
 
         mainActivity=this;
         initializeBroadcastManager();
+        initializeBluetoothReceiver();
     }
 
     public void initializeBroadcastManager(){
@@ -76,6 +85,63 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             }
         }catch (Exception error){
             Toast.makeText(this,error.getMessage(),Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void initializeBluetoothReceiver(){
+        try{
+            if(bluetoothReceiver==null){
+                bluetoothReceiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        final String action = intent.getAction();
+
+                        if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                            final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                                    BluetoothAdapter.ERROR);
+                            setBluetoothStatus(state);
+                        }
+                    }
+                };
+                IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+                registerReceiver(bluetoothReceiver, filter);
+            }
+        }catch (Exception error){
+            Toast.makeText(this,error.getMessage(),Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void setBluetoothStatus(boolean status){
+        bluetoothEnabled = status;
+        if(status){
+            bluetoothStatusTextView.setText(R.string.status_online);
+            bluetoothStatusTextView.setTextColor(getResources().getColor(R.color.green));
+        }else{
+            bluetoothStatusTextView.setText(R.string.status_offline);
+            bluetoothStatusTextView.setTextColor(getResources().getColor(R.color.red));
+        }
+    }
+
+    private void setBluetoothStatus(int state){
+        switch (state) {
+            case BluetoothAdapter.STATE_OFF:
+                bluetoothEnabled = false;
+                bluetoothStatusTextView.setText(R.string.status_offline);
+                bluetoothStatusTextView.setTextColor(getResources().getColor(R.color.red));
+                break;
+            case BluetoothAdapter.STATE_TURNING_OFF:
+                bluetoothStatusTextView.setText(R.string.status_turning_off);
+                bluetoothStatusTextView.setTextColor(getResources().getColor(R.color.yellow));
+                break;
+            case BluetoothAdapter.STATE_ON:
+                bluetoothEnabled = true;
+                bluetoothStatusTextView.setText(R.string.status_online);
+                bluetoothStatusTextView.setTextColor(getResources().getColor(R.color.green));
+                break;
+            case BluetoothAdapter.STATE_TURNING_ON:
+                bluetoothStatusTextView.setText(R.string.status_turning_on);
+                bluetoothStatusTextView.setTextColor(getResources().getColor(R.color.yellow));
+                break;
         }
     }
 
@@ -151,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         try{
             if(requestCode==BLEManager.REQUEST_BLUETOOTH_PERMISSION_NEEDED){
                 if(resultCode== Activity.RESULT_OK){
+                    //setBluetoothStatus(true);
                     BLEManager.requestLocationPermissions(this,getApplicationContext());
                 }
             }
@@ -207,6 +274,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         if(broadcastBLE!=null){
             this.broadcastBLE.unRegister();
         }
+        unregisterReceiver(bluetoothReceiver);
         super.onDestroy();
     }
 }
