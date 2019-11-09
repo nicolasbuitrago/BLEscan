@@ -2,9 +2,6 @@ package com.example.blescan.ble;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -26,7 +23,6 @@ import android.provider.Settings;
 
 import androidx.core.content.ContextCompat;
 
-import com.example.blescan.MainActivity;
 import com.example.blescan.R;
 
 import java.util.ArrayList;
@@ -34,7 +30,7 @@ import java.util.List;
 
 public class BLEManager extends ScanCallback {
 
-    BLEManagerCallerInterface caller;
+    IBLEManagerCaller caller;
     Context context;
     private LogBLE log;
 
@@ -47,7 +43,7 @@ public class BLEManager extends ScanCallback {
     public static int REQUEST_BLUETOOTH_PERMISSION_NEEDED = 1027;
     private BluetoothGatt lastBluetoothGatt;
 
-    public BLEManager(BLEManagerCallerInterface caller, Context context) {
+    public BLEManager(IBLEManagerCaller caller, Context context) {
         this.caller = caller;
         this.context = context;
         this.log = LogBLE.getInstance();

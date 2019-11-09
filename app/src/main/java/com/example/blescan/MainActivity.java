@@ -2,10 +2,6 @@ package com.example.blescan;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,10 +9,9 @@ import android.os.Bundle;
 
 import com.example.blescan.adapters.BluetoothListAdapter;
 import com.example.blescan.ble.BLEManager;
-import com.example.blescan.ble.BLEManagerCallerInterface;
+import com.example.blescan.ble.IBLEManagerCaller;
 import com.example.blescan.ble.BLEService;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,7 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
 
-public class MainActivity extends AppCompatActivity implements BLEManagerCallerInterface {
+public class MainActivity extends AppCompatActivity implements IBLEManagerCaller {
 
     public BLEManager bleManager;
     private MainActivity mainActivity;

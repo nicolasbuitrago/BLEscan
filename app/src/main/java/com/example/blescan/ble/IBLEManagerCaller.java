@@ -1,6 +1,6 @@
 package com.example.blescan.ble;
 
-public interface BLEManagerCallerInterface {
+public interface IBLEManagerCaller {
 
     void scanStartedSuccessfully();
     void scanStoped();
