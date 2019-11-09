@@ -40,8 +40,11 @@ public class BLEService extends Service {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId);
         Notification notification = notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
+                //.setLargeIcon(R.mipmap.ic_launcher_round)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                .setContentTitle(getText(R.string.app_name))
+                .setContentText(getText(R.string.notification_text))
                 .build();
 
         startForeground(ID_SERVICE, notification);
