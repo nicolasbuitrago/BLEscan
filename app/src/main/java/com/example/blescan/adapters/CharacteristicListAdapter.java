@@ -2,6 +2,7 @@ package com.example.blescan.adapters;
 
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import androidx.annotation.NonNull;
 
 import com.example.blescan.MainActivity;
 import com.example.blescan.R;
+import com.example.blescan.ble.BLEManager;
 
 import java.util.ArrayList;
 
@@ -40,13 +42,39 @@ public class CharacteristicListAdapter extends ArrayAdapter<BluetoothGattCharact
         txtTitle.setText(characteristic.getUuid().toString());
 
         txtTitle = (TextView) rowView.findViewById(R.id.characteristic_list_item_text_view2);
-        String perm = characteristic.getPermissions()+"";
+        String perm = getPermissions(characteristic)+" ";
         txtTitle.setText(perm);
 
         txtTitle = (TextView) rowView.findViewById(R.id.characteristic_list_item_text_view3);
-        perm = characteristic.getProperties()+"";
-        txtTitle.setText(characteristics.get(position).getUuid().toString());
+        perm = "";
+        for (BluetoothGattDescriptor descriptor:characteristic.getDescriptors()) {
+            perm += descriptor.getUuid().toString()+"\n";
+        }
+        txtTitle.setText(perm);
 
         return rowView;
+    }
+
+    private String getPermissions(BluetoothGattCharacteristic characteristic){
+        boolean r = BLEManager.isCharacteristicReadable(characteristic),
+                w = BLEManager.isCharacteristicWriteable(characteristic),
+                n = BLEManager.isCharacteristicNotifiable(characteristic);
+        if(r && w && n){
+            return "R/W/N";
+        }else if(r && w){
+            return "R/W";
+        }else if(r && n){
+            return "R/N";
+        }else if(w && n){
+            return "W/N";
+        }else if(r){
+            return "R";
+        }else if(w){
+            return "W";
+        }else if(n){
+            return "N";
+        }else{
+            return "0";
+        }
     }
 }

@@ -13,5 +13,6 @@ public interface IBLEManagerCaller {
     void connectedGATT(String address);
     void disconnectedGATT();
     void discoveredServices(ArrayList<BluetoothGattService> services);
+    void log(String tag, String msg);
 
 }

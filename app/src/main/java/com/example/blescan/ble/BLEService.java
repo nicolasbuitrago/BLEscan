@@ -32,6 +32,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String TYPE_CONNECT_GATT= "com.example.blescan.ble.BLEService.type.TYPE_CONNECT_GATT";
     public static String TYPE_CONNECTED_GATT= "com.example.blescan.ble.BLEService.type.TYPE_CONNECTED_GATT";
     public static String TYPE_DISCONNECTED_GATT= "com.example.blescan.ble.BLEService.type.TYPE_DISCONNECTED_GATT";
+    public static String TYPE_DISCOVER_SERVICES= "com.example.blescan.ble.BLEService.type.TYPE_DISCOVER_SERVICES";
     public static String TYPE_DISCOVERED_SERVICES= "com.example.blescan.ble.BLEService.type.TYPE_DISCOVERED_SERVICES";
     public static String TYPE_NEW_NOTIFICATION= "com.example.blescan.ble.BLEService.type.TYPE_NEW_NOTIFICATION";
     public static String TYPE_SEND_CHARACTERISTICS= "com.example.blescan.ble.BLEService.type.TYPE_SEND_CHARACTERISTICS";
@@ -161,6 +162,11 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     }
 
     @Override
+    public void log(String tag, String msg) {
+        this.log.add(tag,msg);
+    }
+
+    @Override
     public void MessageReceivedThroughBroadcastManager(String channel, String type, Bundle args) {
         if(TYPE_SCAN_DEVICES.equals(type)){
             this.bleManager.scanDevices();
@@ -172,6 +178,8 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         } else if (TYPE_SEND_CHARACTERISTICS.equals(type)){
             //ArrayList<BluetoothGattCharacteristic> characteristics = args.getParcelableArrayList(EXTRA_CHARACTERISTICS);
             this.broadcastManager.sendBroadcast(TYPE_SHOW_CHARACTERISTICS, args);
+        } else if(TYPE_DISCOVER_SERVICES.equals(type)){
+            this.bleManager.discoverServices();
         }
     }
 

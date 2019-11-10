@@ -286,6 +286,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 String address = args.getString(BLEService.EXTRA_ADDRESS);
                 setFragment(ServicesList.newInstance(address));
                 this.address=address;
+                //this.broadcastBLE.sendBroadcast(BLEService.TYPE_DISCOVER_SERVICES,null);
             } else if(BLEService.TYPE_DISCONNECTED_GATT.equals(type)){
                 Toast.makeText(this,"Disconnected",Toast.LENGTH_LONG).show();
             } else if (BLEService.TYPE_DISCOVERED_SERVICES.equals(type)){

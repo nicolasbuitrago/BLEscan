@@ -218,6 +218,10 @@ public class BLEManager extends ScanCallback {
         return null;
     }
 
+    public void discoverServices() {
+        this.lastBluetoothGatt.discoverServices();
+    }
+
     public void connectToGATTServer(BluetoothDevice device){
         try{
             this.lastBluetoothGatt =  device.connectGatt(this.context, false, new BluetoothGattCallback() {
@@ -248,8 +252,13 @@ public class BLEManager extends ScanCallback {
                 @Override
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                     super.onServicesDiscovered(gatt, status);
-                    ArrayList<BluetoothGattService> services = new ArrayList<>(gatt.getServices());
-                    caller.discoveredServices(services);
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        ArrayList<BluetoothGattService> services = new ArrayList<>(gatt.getServices());
+                        caller.discoveredServices(services);
+                    } else {
+                        caller.log(TAG, "onServicesDiscovered received: " + status);
+                    }
+
                 }
 
                 @Override
@@ -297,16 +306,16 @@ public class BLEManager extends ScanCallback {
         }
     }
 
-    public boolean isCharacteristicWriteable(BluetoothGattCharacteristic characteristic) {
+    public static boolean isCharacteristicWriteable(BluetoothGattCharacteristic characteristic) {
         return (characteristic.getProperties() &
                 (BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) != 0;
     }
 
-    public boolean isCharacteristicReadable(BluetoothGattCharacteristic characteristic) {
+    public static boolean isCharacteristicReadable(BluetoothGattCharacteristic characteristic) {
         return ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0);
     }
 
-    public boolean isCharacteristicNotifiable(BluetoothGattCharacteristic characteristic) {
+    public static boolean isCharacteristicNotifiable(BluetoothGattCharacteristic characteristic) {
         return ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0);
     }
 
@@ -380,5 +389,4 @@ public class BLEManager extends ScanCallback {
         }
         return false;
     }
-
 }
