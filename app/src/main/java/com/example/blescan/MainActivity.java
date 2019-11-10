@@ -3,6 +3,7 @@ package com.example.blescan;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,17 +15,20 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.example.blescan.adapters.BluetoothListAdapter;
+import com.example.blescan.adapters.ServiceListAdapter;
 import com.example.blescan.ble.BLEManager;
 import com.example.blescan.ble.IBLEManagerCaller;
 import com.example.blescan.ble.BLEService;
 import com.example.blescan.broadcast.BroadcastManager;
 import com.example.blescan.broadcast.IBroadcastManagerCaller;
 import com.example.blescan.fragments.DeviceList;
+import com.example.blescan.fragments.ServicesList;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -45,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     private boolean bluetoothEnabled;
     private TextView bluetoothStatusTextView;
     private DeviceList devicesFragment;
+    private ServicesList servicesList;
+    private String address;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
         devicesFragment = new DeviceList();
+        servicesList = new ServicesList();
         fragmentTransaction.add(R.id.fragment_container, devicesFragment);
         fragmentTransaction.commit();
 
@@ -264,10 +271,34 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 });
             } else if(BLEService.TYPE_CONNECTED_GATT.equals(type)){
                 Toast.makeText(this,"Connected",Toast.LENGTH_LONG).show();
+                String address = args.getString(BLEService.EXTRA_ADDRESS);
+                setFragment(ServicesList.newInstance(address));
             } else if(BLEService.TYPE_DISCONNECTED_GATT.equals(type)){
                 Toast.makeText(this,"Disconnected",Toast.LENGTH_LONG).show();
+            } else if (BLEService.TYPE_DISCOVERED_SERVICES.equals(type)){
+                final ArrayList<BluetoothGattService> services = args.getParcelableArrayList(BLEService.EXTRA_SERVICES);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            ListView listView=(ListView)findViewById(R.id.services_list_id);
+                            ServiceListAdapter adapter=new ServiceListAdapter(getApplicationContext(),services, mainActivity);
+                            listView.setAdapter(adapter);
+                        }catch (Exception error){
+
+                        }
+                    }
+                });
             }
         }
+    }
+
+    private void setFragment(Fragment fragment){
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+        fragmentTransaction.replace(R.id.fragment_container, fragment);
+        fragmentTransaction.commit();
     }
 
     @Override

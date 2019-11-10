@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -15,6 +16,8 @@ import androidx.core.app.NotificationCompat;
 import com.example.blescan.R;
 import com.example.blescan.broadcast.BroadcastManager;
 import com.example.blescan.broadcast.IBroadcastManagerCaller;
+
+import java.util.ArrayList;
 
 public class BLEService extends Service implements IBLEManagerCaller, IBroadcastManagerCaller {
 
@@ -28,10 +31,12 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String TYPE_CONNECT_GATT= "com.example.blescan.ble.BLEService.type.TYPE_CONNECT_GATT";
     public static String TYPE_CONNECTED_GATT= "com.example.blescan.ble.BLEService.type.TYPE_CONNECTED_GATT";
     public static String TYPE_DISCONNECTED_GATT= "com.example.blescan.ble.BLEService.type.TYPE_DISCONNECTED_GATT";
+    public static String TYPE_DISCOVERED_SERVICES= "com.example.blescan.ble.BLEService.type.TYPE_DISCOVERED_SERVICES";
     public static String TYPE_NEW_NOTIFICATION= "com.example.blescan.ble.BLEService.type.TYPE_NEW_NOTIFICATION";
 
     public static String EXTRA_DEVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_DEVICES";
     public static String EXTRA_ADDRESS= "com.example.blescan.ble.BLEService.extra.EXTRA_ADDRESS";
+    public static String EXTRA_SERVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_SERVICES";
 
     private static final int ID_SERVICE = 1337;
 
@@ -133,13 +138,22 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     }
 
     @Override
-    public void connectedGATT() {
-        this.broadcastManager.sendBroadcast(TYPE_CONNECTED_GATT,null);
+    public void connectedGATT(String address) {
+        Bundle args = new Bundle();
+        args.putString(EXTRA_ADDRESS,address);
+        this.broadcastManager.sendBroadcast(TYPE_CONNECTED_GATT,args);
     }
 
     @Override
     public void disconnectedGATT() {
         this.broadcastManager.sendBroadcast(TYPE_DISCONNECTED_GATT,null);
+    }
+
+    @Override
+    public void discoveredServices(ArrayList<BluetoothGattService> services) {
+        Bundle args = new Bundle();
+        args.putParcelableArrayList(EXTRA_SERVICES,services);
+        this.broadcastManager.sendBroadcast(TYPE_DISCOVERED_SERVICES,args);
     }
 
     @Override

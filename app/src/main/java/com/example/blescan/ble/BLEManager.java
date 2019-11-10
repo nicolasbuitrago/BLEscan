@@ -238,7 +238,7 @@ public class BLEManager extends ScanCallback {
                     if(newState==BluetoothGatt.STATE_CONNECTED){
                         gatt.discoverServices();
                         lastBluetoothGatt=gatt;
-                        caller.connectedGATT();
+                        caller.connectedGATT(gatt.getDevice().getAddress());
                     }else if(newState == BluetoothGatt.STATE_DISCONNECTED){
                         lastBluetoothGatt = null;
                         caller.disconnectedGATT();
@@ -248,7 +248,8 @@ public class BLEManager extends ScanCallback {
                 @Override
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                     super.onServicesDiscovered(gatt, status);
-
+                    ArrayList<BluetoothGattService> services = new ArrayList<>(gatt.getServices());
+                    caller.discoveredServices(services);
                 }
 
                 @Override
