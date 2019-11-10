@@ -3,6 +3,7 @@ package com.example.blescan.ble;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -14,6 +15,7 @@ import android.os.IBinder;
 
 import androidx.core.app.NotificationCompat;
 
+import com.example.blescan.MainActivity;
 import com.example.blescan.R;
 import com.example.blescan.broadcast.BroadcastManager;
 import com.example.blescan.broadcast.IBroadcastManagerCaller;
@@ -37,17 +39,22 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String TYPE_NEW_NOTIFICATION= "com.example.blescan.ble.BLEService.type.TYPE_NEW_NOTIFICATION";
     public static String TYPE_SEND_CHARACTERISTICS= "com.example.blescan.ble.BLEService.type.TYPE_SEND_CHARACTERISTICS";
     public static String TYPE_SHOW_CHARACTERISTICS= "com.example.blescan.ble.BLEService.type.TYPE_SHOW_CHARACTERISTICS";
+    public static String TYPE_CHARACTERISTIC_CHANGED= "com.example.blescan.ble.BLEService.type.TYPE_CHARACTERISTIC_CHANGED";
 
     public static String EXTRA_DEVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_DEVICES";
     public static String EXTRA_ADDRESS= "com.example.blescan.ble.BLEService.extra.EXTRA_ADDRESS";
     public static String EXTRA_SERVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_SERVICES";
     public static String EXTRA_CHARACTERISTICS= "com.example.blescan.ble.BLEService.extra.EXTRA_CHARACTERISTICS";
+    public static String EXTRA_CHARACTERISTIC= "com.example.blescan.ble.BLEService.extra.EXTRA_CHARACTERISTIC";
 
     private static final int ID_SERVICE = 1337;
+    private static int ID_NOTIFICATION = 1027;
 
     private  BLEManager bleManager;
     private BroadcastManager broadcastManager;
     private LogBLE log;
+    private String notificationChannel;
+    private String channelId;
 
     public BLEService() { }
 
@@ -66,20 +73,28 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         initializeBroadcastManager();
         bleManager = new BLEManager(this,getApplicationContext());
 
+        // Create an explicit intent for an Activity in your app
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
         // Create the Foreground Service
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        String channelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? createNotificationChannel(notificationManager) : "";
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId);
+        notificationChannel = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? createNotificationChannel(notificationManager) : "";
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, notificationChannel);
         Notification notification = notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
                 //.setLargeIcon(R.mipmap.ic_launcher_round)
-                .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setContentTitle(getText(R.string.app_name))
                 .setContentText(getText(R.string.notification_text))
+                .setContentIntent(pendingIntent)
                 .build();
 
         startForeground(ID_SERVICE, notification);
+        
+        this.channelId = createChannel(notificationManager);
     }
 
     public void initializeBroadcastManager(){
@@ -95,10 +110,22 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     //@RequiresApi(Build.VERSION_CODES.O)
     private String createNotificationChannel(NotificationManager notificationManager){
         String channelId = "ble";
-        String channelName = "BLEscan channel";
+        String channelName = "BLEscan service";
+        NotificationChannel channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT);
+        // omitted the LED color
+        //channel.setImportance(NotificationManager.IMPORTANCE_MAX);
+        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        notificationManager.createNotificationChannel(channel);
+        return channelId;
+    }
+    
+    //@RequiresApi(Build.VERSION_CODES.O)
+    private String createChannel(NotificationManager notificationManager){
+        String channelId = "bleChars";
+        String channelName = "BLEscan";
         NotificationChannel channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH);
         // omitted the LED color
-        channel.setImportance(NotificationManager.IMPORTANCE_NONE);
+        //channel.setImportance(NotificationManager.IMPORTANCE_MAX);
         channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
         notificationManager.createNotificationChannel(channel);
         return channelId;
@@ -162,6 +189,33 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     }
 
     @Override
+    public void characteristicChanged(BluetoothGattCharacteristic characteristic) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        // Create an explicit intent for an Activity in your app
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId);
+        Notification notification = notificationBuilder.setSmallIcon(R.mipmap.ic_launcher_round)
+                //.setLargeIcon(R.mipmap.ic_launcher_round)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setContentTitle(getText(R.string.app_name))
+                .setContentText("Characteristic with UUID: "+characteristic.getUuid().toString()
+                        +" changed.")
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText("Characteristic with UUID: "+characteristic.getUuid().toString()
+                                +" changed."))
+                .setContentIntent(pendingIntent)
+                .build();
+        notificationManager.notify(ID_NOTIFICATION++,notification);
+        Bundle args = new Bundle();
+        args.putParcelable(EXTRA_CHARACTERISTIC,characteristic);
+        this.broadcastManager.sendBroadcast(TYPE_CHARACTERISTIC_CHANGED,args);
+    }
+
+    @Override
     public void log(String tag, String msg) {
         this.log.add(tag,msg);
     }
@@ -178,9 +232,10 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         } else if (TYPE_SEND_CHARACTERISTICS.equals(type)){
             //ArrayList<BluetoothGattCharacteristic> characteristics = args.getParcelableArrayList(EXTRA_CHARACTERISTICS);
             this.broadcastManager.sendBroadcast(TYPE_SHOW_CHARACTERISTICS, args);
-        } else if(TYPE_DISCOVER_SERVICES.equals(type)){
-            this.bleManager.discoverServices();
         }
+        /*else if(TYPE_DISCOVER_SERVICES.equals(type)){
+            this.bleManager.discoverServices();
+        }*/
     }
 
     @Override

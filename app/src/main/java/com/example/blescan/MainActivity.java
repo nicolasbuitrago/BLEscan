@@ -319,6 +319,19 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                         }
                     }
                 });
+            } else if(BLEService.TYPE_CHARACTERISTIC_CHANGED.equals(type)){
+                final BluetoothGattCharacteristic characteristic = args.getParcelable(BLEService.EXTRA_CHARACTERISTIC);
+                AlertDialog.Builder builder=new AlertDialog.Builder(this)
+                        .setTitle("Characteristic changed")
+                        .setMessage("Value of characteristic with UUID: "+characteristic.getUuid().toString()
+                                +" changed.")
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+                builder.show();
             }
         }
     }

@@ -254,6 +254,7 @@ public class BLEManager extends ScanCallback {
                     super.onServicesDiscovered(gatt, status);
                     if (status == BluetoothGatt.GATT_SUCCESS) {
                         ArrayList<BluetoothGattService> services = new ArrayList<>(gatt.getServices());
+                        searchAndSetAllNotifyAbleCharacteristics();
                         caller.discoveredServices(services);
                     } else {
                         caller.log(TAG, "onServicesDiscovered received: " + status);
@@ -274,6 +275,7 @@ public class BLEManager extends ScanCallback {
                 @Override
                 public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                     super.onCharacteristicChanged(gatt, characteristic);
+                    caller.characteristicChanged(characteristic);
                 }
 
                 @Override
@@ -321,7 +323,6 @@ public class BLEManager extends ScanCallback {
 
     private void searchAndSetAllNotifyAbleCharacteristics() {
         try {
-
             if(lastBluetoothGatt!=null){
                 for(BluetoothGattService currentService: lastBluetoothGatt.getServices()){
                     if(currentService!=null){
