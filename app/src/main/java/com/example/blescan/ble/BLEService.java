@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.Intent;
@@ -33,10 +34,13 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String TYPE_DISCONNECTED_GATT= "com.example.blescan.ble.BLEService.type.TYPE_DISCONNECTED_GATT";
     public static String TYPE_DISCOVERED_SERVICES= "com.example.blescan.ble.BLEService.type.TYPE_DISCOVERED_SERVICES";
     public static String TYPE_NEW_NOTIFICATION= "com.example.blescan.ble.BLEService.type.TYPE_NEW_NOTIFICATION";
+    public static String TYPE_SEND_CHARACTERISTICS= "com.example.blescan.ble.BLEService.type.TYPE_SEND_CHARACTERISTICS";
+    public static String TYPE_SHOW_CHARACTERISTICS= "com.example.blescan.ble.BLEService.type.TYPE_SHOW_CHARACTERISTICS";
 
     public static String EXTRA_DEVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_DEVICES";
     public static String EXTRA_ADDRESS= "com.example.blescan.ble.BLEService.extra.EXTRA_ADDRESS";
     public static String EXTRA_SERVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_SERVICES";
+    public static String EXTRA_CHARACTERISTICS= "com.example.blescan.ble.BLEService.extra.EXTRA_CHARACTERISTICS";
 
     private static final int ID_SERVICE = 1337;
 
@@ -165,6 +169,9 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         } else if(TYPE_CONNECT_GATT.equals(type)){
             String address = args.getString(EXTRA_ADDRESS);
             this.bleManager.connectToGATTServer(this.bleManager.getByAddress(address));
+        } else if (TYPE_SEND_CHARACTERISTICS.equals(type)){
+            //ArrayList<BluetoothGattCharacteristic> characteristics = args.getParcelableArrayList(EXTRA_CHARACTERISTICS);
+            this.broadcastManager.sendBroadcast(TYPE_SHOW_CHARACTERISTICS, args);
         }
     }
 

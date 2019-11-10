@@ -259,18 +259,9 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     public void showCharacteristics(BluetoothGattService service) {
         setFragment(characteristicFragment);
         final ArrayList<BluetoothGattCharacteristic> characteristics = new ArrayList<>(service.getCharacteristics());
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    ListView listView=(ListView)findViewById(R.id.characteristic_list_id);
-                    CharacteristicListAdapter adapter=new CharacteristicListAdapter(getApplicationContext(),characteristics, mainActivity);
-                    listView.setAdapter(adapter);
-                }catch (Exception error){
-                    error.printStackTrace();
-                }
-            }
-        });
+        Bundle args = new Bundle();
+        args.putParcelableArrayList(BLEService.EXTRA_CHARACTERISTICS,characteristics);
+        this.broadcastBLE.sendBroadcast(BLEService.TYPE_SEND_CHARACTERISTICS,args);
     }
 
     @Override
@@ -310,6 +301,20 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                             listView.setAdapter(adapter);
                         }catch (Exception error){
 
+                        }
+                    }
+                });
+            } else if(BLEService.TYPE_SHOW_CHARACTERISTICS.equals(type)){
+                final ArrayList<BluetoothGattCharacteristic> characteristics = args.getParcelableArrayList(BLEService.EXTRA_CHARACTERISTICS);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            ListView listView=(ListView)findViewById(R.id.characteristic_list_id);
+                            CharacteristicListAdapter adapter=new CharacteristicListAdapter(getApplicationContext(),characteristics, mainActivity);
+                            listView.setAdapter(adapter);
+                        }catch (Exception error){
+                            error.printStackTrace();
                         }
                     }
                 });
