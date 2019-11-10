@@ -3,6 +3,7 @@ package com.example.blescan;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
@@ -15,12 +16,14 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.example.blescan.adapters.BluetoothListAdapter;
+import com.example.blescan.adapters.CharacteristicListAdapter;
 import com.example.blescan.adapters.ServiceListAdapter;
 import com.example.blescan.ble.BLEManager;
 import com.example.blescan.ble.IBLEManagerCaller;
 import com.example.blescan.ble.BLEService;
 import com.example.blescan.broadcast.BroadcastManager;
 import com.example.blescan.broadcast.IBroadcastManagerCaller;
+import com.example.blescan.fragments.CharacteristicFragment;
 import com.example.blescan.fragments.DeviceList;
 import com.example.blescan.fragments.ServicesList;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -51,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     private DeviceList devicesFragment;
     private ServicesList servicesList;
     private String address;
+    private CharacteristicFragment characteristicFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -252,6 +256,23 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         this.broadcastBLE.sendBroadcast(BLEService.TYPE_CONNECT_GATT,args);
     }
 
+    public void showCharacteristics(BluetoothGattService service) {
+        setFragment(characteristicFragment);
+        final ArrayList<BluetoothGattCharacteristic> characteristics = new ArrayList<>(service.getCharacteristics());
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    ListView listView=(ListView)findViewById(R.id.characteristic_list_id);
+                    CharacteristicListAdapter adapter=new CharacteristicListAdapter(getApplicationContext(),characteristics, mainActivity);
+                    listView.setAdapter(adapter);
+                }catch (Exception error){
+                    error.printStackTrace();
+                }
+            }
+        });
+    }
+
     @Override
     public void MessageReceivedThroughBroadcastManager(String channel, String type, Bundle args) {
         if(BLEService.CHANNEL.equals(channel)){
@@ -273,10 +294,13 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 Toast.makeText(this,"Connected",Toast.LENGTH_LONG).show();
                 String address = args.getString(BLEService.EXTRA_ADDRESS);
                 setFragment(ServicesList.newInstance(address));
+                this.address=address;
             } else if(BLEService.TYPE_DISCONNECTED_GATT.equals(type)){
                 Toast.makeText(this,"Disconnected",Toast.LENGTH_LONG).show();
             } else if (BLEService.TYPE_DISCOVERED_SERVICES.equals(type)){
                 final ArrayList<BluetoothGattService> services = args.getParcelableArrayList(BLEService.EXTRA_SERVICES);
+                this.characteristicFragment = CharacteristicFragment.newInstance(address);
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

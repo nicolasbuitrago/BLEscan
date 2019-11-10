@@ -35,16 +35,16 @@ public class ServiceListAdapter extends ArrayAdapter<BluetoothGattService> {
         LayoutInflater inflater = mainActivity.getLayoutInflater();
 
         View rowView= inflater.inflate(R.layout.service_list_item, null, true);
-
+        final BluetoothGattService service = services.get(position);
         TextView txtTitle = (TextView) rowView.findViewById(R.id.service_list_item_text_view);
-        txtTitle.setText(services.get(position).getUuid().toString());
+        txtTitle.setText(service.getUuid().toString());
 
         rowView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
                 String uuid=((TextView) view.findViewById(R.id.service_list_item_text_view)).getText()+"";
                 Toast.makeText(context,"selected UUID: "+uuid,Toast.LENGTH_LONG).show();
-
+                mainActivity.showCharacteristics(service);
                 return false;
             }
         });
