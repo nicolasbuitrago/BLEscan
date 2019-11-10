@@ -35,7 +35,16 @@ public class CharacteristicListAdapter extends ArrayAdapter<BluetoothGattCharact
 
         View rowView= inflater.inflate(R.layout.characteristic_list_item, null, true);
 
+        BluetoothGattCharacteristic characteristic = characteristics.get(position);
         TextView txtTitle = (TextView) rowView.findViewById(R.id.characteristic_list_item_text_view);
+        txtTitle.setText(characteristic.getUuid().toString());
+
+        txtTitle = (TextView) rowView.findViewById(R.id.characteristic_list_item_text_view2);
+        String perm = characteristic.getPermissions()+"";
+        txtTitle.setText(perm);
+
+        txtTitle = (TextView) rowView.findViewById(R.id.characteristic_list_item_text_view3);
+        perm = characteristic.getProperties()+"";
         txtTitle.setText(characteristics.get(position).getUuid().toString());
 
         return rowView;
