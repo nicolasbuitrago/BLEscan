@@ -23,6 +23,7 @@ import com.example.blescan.ble.IBLEManagerCaller;
 import com.example.blescan.ble.BLEService;
 import com.example.blescan.broadcast.BroadcastManager;
 import com.example.blescan.broadcast.IBroadcastManagerCaller;
+import com.example.blescan.fragments.CharacteristicDialog;
 import com.example.blescan.fragments.CharacteristicFragment;
 import com.example.blescan.fragments.DeviceList;
 import com.example.blescan.fragments.ServicesList;
@@ -31,20 +32,23 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.text.InputType;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements IBroadcastManagerCaller, DeviceList.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements IBroadcastManagerCaller, DeviceList.OnFragmentInteractionListener, CharacteristicDialog.CharacteristicDialogListener {
 
     private MainActivity mainActivity;
     private BroadcastManager broadcastBLE;
@@ -325,15 +329,45 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                         .setTitle("Characteristic changed")
                         .setMessage("Value of characteristic with UUID: "+characteristic.getUuid().toString()
                                 +" changed.")
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        .setNeutralButton("Ok", new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                changeCharacteristicValue(characteristic);
                             }
                         });
                 builder.show();
             }
         }
+    }
+
+    public void changeCharacteristicValue(final BluetoothGattCharacteristic characteristic){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Write characteristic");
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String v = input.getText().toString();
+                modifyCharacteristic(characteristic,v.getBytes());
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+
+//        DialogFragment dialog = CharacteristicDialog.newInstance(characteristic);
+//        dialog.show(getSupportFragmentManager(), "CharacteristicDialog");
     }
 
     private void setFragment(Fragment fragment){
@@ -377,5 +411,13 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     @Override
     public void onFragmentInteraction(Uri uri) {
 
+    }
+
+    @Override
+    public void modifyCharacteristic(BluetoothGattCharacteristic characteristic, byte[] data) {
+        Bundle args = new Bundle();
+        args.putByteArray(BLEService.EXTRA_VALUE,data);
+        args.putParcelable(BLEService.EXTRA_CHARACTERISTIC,characteristic);
+        this.broadcastBLE.sendBroadcast(BLEService.TYPE_WRITE_CHARACTERISTIC,args);
     }
 }

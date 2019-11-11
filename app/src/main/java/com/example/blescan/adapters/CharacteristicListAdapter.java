@@ -52,6 +52,8 @@ public class CharacteristicListAdapter extends ArrayAdapter<BluetoothGattCharact
         }
         txtTitle.setText(perm);
 
+
+
         return rowView;
     }
 

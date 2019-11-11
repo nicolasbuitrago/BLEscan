@@ -40,12 +40,14 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String TYPE_SEND_CHARACTERISTICS= "com.example.blescan.ble.BLEService.type.TYPE_SEND_CHARACTERISTICS";
     public static String TYPE_SHOW_CHARACTERISTICS= "com.example.blescan.ble.BLEService.type.TYPE_SHOW_CHARACTERISTICS";
     public static String TYPE_CHARACTERISTIC_CHANGED= "com.example.blescan.ble.BLEService.type.TYPE_CHARACTERISTIC_CHANGED";
+    public static String TYPE_WRITE_CHARACTERISTIC= "com.example.blescan.ble.BLEService.type.TYPE_WRITE_CHARACTERISTIC";
 
     public static String EXTRA_DEVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_DEVICES";
     public static String EXTRA_ADDRESS= "com.example.blescan.ble.BLEService.extra.EXTRA_ADDRESS";
     public static String EXTRA_SERVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_SERVICES";
     public static String EXTRA_CHARACTERISTICS= "com.example.blescan.ble.BLEService.extra.EXTRA_CHARACTERISTICS";
     public static String EXTRA_CHARACTERISTIC= "com.example.blescan.ble.BLEService.extra.EXTRA_CHARACTERISTIC";
+    public static String EXTRA_VALUE= "com.example.blescan.ble.BLEService.extra.EXTRA_VALUE";
 
     private static final int ID_SERVICE = 1337;
     private static int ID_NOTIFICATION = 1027;
@@ -232,6 +234,10 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         } else if (TYPE_SEND_CHARACTERISTICS.equals(type)){
             //ArrayList<BluetoothGattCharacteristic> characteristics = args.getParcelableArrayList(EXTRA_CHARACTERISTICS);
             this.broadcastManager.sendBroadcast(TYPE_SHOW_CHARACTERISTICS, args);
+        }else if(TYPE_WRITE_CHARACTERISTIC.equals(type)){
+            BluetoothGattCharacteristic characteristic = args.getParcelable(EXTRA_CHARACTERISTIC);
+            byte[] data = args.getByteArray(EXTRA_VALUE);
+            bleManager.writeCharacteristic(characteristic,data);
         }
         /*else if(TYPE_DISCOVER_SERVICES.equals(type)){
             this.bleManager.discoverServices();

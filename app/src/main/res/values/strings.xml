@@ -13,4 +13,8 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="address">Address:</string>
     <string name="connected">Connected</string>
+    <string name="characteristic_value">Characteristic value:</string>
+    <string name="new_value">New value</string>
+    <string name="accept">Accept</string>
+    <string name="cancel">Cancel</string>
 </resources>
