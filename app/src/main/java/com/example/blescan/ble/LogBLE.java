@@ -21,8 +21,13 @@ public class LogBLE {
     public void add(String msg){
         this.log.add(msg);
     }
+
     public void add(String tag, String msg){
         this.log.add(tag+": "+msg);
+    }
+
+    public void error(String tag, String msg){
+        this.log.add("Error / "+tag+": "+msg);
     }
 
     public static String ERROR = "Error BLE: ";

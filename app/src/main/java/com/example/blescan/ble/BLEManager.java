@@ -58,7 +58,7 @@ public class BLEManager extends ScanCallback {
             bluetoothManager=(BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
             this.bluetoothAdapter=bluetoothManager.getAdapter();
         }catch (Exception error){
-            this.log.add(TAG,"initialize. "+error.getMessage());
+            caller.error(TAG,"initialize. "+error.getMessage());
         }
     }
 
@@ -66,7 +66,7 @@ public class BLEManager extends ScanCallback {
         try{
             return bluetoothManager.getAdapter().isEnabled();
         }catch (Exception error){
-            this.log.add(TAG,"isBluetoothOn. "+error.getMessage());
+            caller.error(TAG,"isBluetoothOn. "+error.getMessage());
         }
         return false;
     }
@@ -162,7 +162,7 @@ public class BLEManager extends ScanCallback {
             bluetoothLeScanner.startScan(this);
             caller.scanStartedSuccessfully();
         }catch (Exception error){
-            this.log.add(TAG,"scan devices. "+error.getMessage());
+            caller.error(TAG,"scan devices. "+error.getMessage());
         }
     }
 
@@ -171,7 +171,7 @@ public class BLEManager extends ScanCallback {
             bluetoothLeScanner=bluetoothAdapter.getBluetoothLeScanner();
             bluetoothLeScanner.stopScan(this);
         }catch (Exception error){
-            this.log.add(TAG,"stopScan. "+error.getMessage());
+            caller.error(TAG,"stopScan. "+error.getMessage());
         }
     }
 
@@ -257,7 +257,7 @@ public class BLEManager extends ScanCallback {
                         searchAndSetAllNotifyAbleCharacteristics();
                         caller.discoveredServices(services);
                     } else {
-                        caller.log(TAG, "onServicesDiscovered received: " + status);
+                        caller.error(TAG, "onServicesDiscovered received: " + status);
                     }
 
                 }
@@ -265,11 +265,17 @@ public class BLEManager extends ScanCallback {
                 @Override
                 public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                     super.onCharacteristicRead(gatt, characteristic, status);
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        caller.showCharacteristic(characteristic);
+                    }
                 }
 
                 @Override
                 public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                     super.onCharacteristicWrite(gatt, characteristic, status);
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        caller.showCharacteristic(characteristic);
+                    }
                 }
 
                 @Override
@@ -304,7 +310,7 @@ public class BLEManager extends ScanCallback {
                 }
             });
         }catch (Exception error){
-            this.log.add(TAG,LogBLE.ERROR+error.getMessage());
+            caller.error(TAG,LogBLE.ERROR+error.getMessage());
         }
     }
 
@@ -340,7 +346,7 @@ public class BLEManager extends ScanCallback {
                                                 ) {
                                                     current.bluetoothHelperErrorThrown(internalError);
                                                 }*/
-                                                this.log.add(TAG,"searchAndSetAllNotifyAbleCharacteristics. "+internalError.getMessage());
+                                                caller.error(TAG,"searchAndSetAllNotifyAbleCharacteristics. "+internalError.getMessage());
                                             }
                                         }
                                     }
@@ -356,7 +362,7 @@ public class BLEManager extends ScanCallback {
             ) {
                 current.bluetoothHelperErrorThrown(error);
             }*/
-            this.log.add(TAG,"searchAndSetAllNotifyAbleCharacteristics. "+error.getMessage());
+            caller.error(TAG,"searchAndSetAllNotifyAbleCharacteristics. "+error.getMessage());
         }
 
     }
@@ -370,7 +376,7 @@ public class BLEManager extends ScanCallback {
             ) {
                 current.bluetoothHelperErrorThrown(error);
             }*/
-            this.log.add(TAG,"readCharacteristic. "+error.getMessage());
+            caller.error(TAG,"readCharacteristic. "+error.getMessage());
         }
         return false;
     }
@@ -386,7 +392,7 @@ public class BLEManager extends ScanCallback {
             ) {
                 current.bluetoothHelperErrorThrown(error);
             }*/
-            this.log.add(TAG,"writeCharacteristic. "+error.getMessage());
+            caller.error(TAG,"writeCharacteristic. "+error.getMessage());
         }
         return false;
     }

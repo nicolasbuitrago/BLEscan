@@ -41,6 +41,11 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String TYPE_SHOW_CHARACTERISTICS= "com.example.blescan.ble.BLEService.type.TYPE_SHOW_CHARACTERISTICS";
     public static String TYPE_CHARACTERISTIC_CHANGED= "com.example.blescan.ble.BLEService.type.TYPE_CHARACTERISTIC_CHANGED";
     public static String TYPE_WRITE_CHARACTERISTIC= "com.example.blescan.ble.BLEService.type.TYPE_WRITE_CHARACTERISTIC";
+    public static String TYPE_READ_CHARACTERISTIC= "com.example.blescan.ble.BLEService.type.TYPE_READ_CHARACTERISTIC";
+    public static String TYPE_SHOW_CHARACTERISTIC= "com.example.blescan.ble.BLEService.type.TYPE_SHOW_CHARACTERISTIC";
+
+    public static String TYPE_SUCCESS= "com.example.blescan.ble.BLEService.type.TYPE_SUCCESS";
+    public static String TYPE_ERROR= "com.example.blescan.ble.BLEService.type.TYPE_ERROR";
 
     public static String EXTRA_DEVICES= "com.example.blescan.ble.BLEService.extra.EXTRA_DEVICES";
     public static String EXTRA_ADDRESS= "com.example.blescan.ble.BLEService.extra.EXTRA_ADDRESS";
@@ -48,6 +53,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String EXTRA_CHARACTERISTICS= "com.example.blescan.ble.BLEService.extra.EXTRA_CHARACTERISTICS";
     public static String EXTRA_CHARACTERISTIC= "com.example.blescan.ble.BLEService.extra.EXTRA_CHARACTERISTIC";
     public static String EXTRA_VALUE= "com.example.blescan.ble.BLEService.extra.EXTRA_VALUE";
+    public static String EXTRA_MESSAGE= "com.example.blescan.ble.BLEService.extra.EXTRA_VALUE";
 
     private static final int ID_SERVICE = 1337;
     private static int ID_NOTIFICATION = 1027;
@@ -155,7 +161,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     }
 
     @Override
-    public void scanStoped() {
+    public void scanStopped() {
 
     }
 
@@ -218,8 +224,20 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     }
 
     @Override
+    public void showCharacteristic(BluetoothGattCharacteristic characteristic) {
+        Bundle args = new Bundle();
+        args.putParcelable(EXTRA_CHARACTERISTIC,characteristic);
+        this.broadcastManager.sendBroadcast(TYPE_SHOW_CHARACTERISTIC,args);
+    }
+
+    @Override
     public void log(String tag, String msg) {
         this.log.add(tag,msg);
+    }
+
+    @Override
+    public void error(String tag, String msg) {
+        this.log.error(tag,msg);
     }
 
     @Override
@@ -237,7 +255,20 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         }else if(TYPE_WRITE_CHARACTERISTIC.equals(type)){
             BluetoothGattCharacteristic characteristic = args.getParcelable(EXTRA_CHARACTERISTIC);
             byte[] data = args.getByteArray(EXTRA_VALUE);
-            bleManager.writeCharacteristic(characteristic,data);
+            boolean r = bleManager.writeCharacteristic(characteristic,data);
+            if(!r){
+                Bundle bundle = new Bundle();
+                bundle.putString(EXTRA_MESSAGE,"Error writing characteristic.");
+                this.broadcastManager.sendBroadcast(TYPE_ERROR,bundle);
+            }
+        }else if (TYPE_READ_CHARACTERISTIC.equals(type)){
+            BluetoothGattCharacteristic characteristic = args.getParcelable(EXTRA_CHARACTERISTIC);
+            boolean r = bleManager.readCharacteristic(characteristic);
+            if(!r){
+                Bundle bundle = new Bundle();
+                bundle.putString(EXTRA_MESSAGE,"Error reading characteristic.");
+                this.broadcastManager.sendBroadcast(TYPE_ERROR,bundle);
+            }
         }
         /*else if(TYPE_DISCOVER_SERVICES.equals(type)){
             this.bleManager.discoverServices();

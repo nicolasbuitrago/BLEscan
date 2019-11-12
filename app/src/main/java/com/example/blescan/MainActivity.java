@@ -45,7 +45,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements IBroadcastManagerCaller, DeviceList.OnFragmentInteractionListener, CharacteristicDialog.CharacteristicDialogListener {
+public class MainActivity extends AppCompatActivity implements IBroadcastManagerCaller, DeviceList.OnFragmentInteractionListener {
 
     private MainActivity mainActivity;
     private BroadcastManager broadcastBLE;
@@ -329,12 +329,59 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                         .setNeutralButton("Ok", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                changeCharacteristicValue(characteristic);
+                                dialogInterface.cancel();
                             }
                         });
                 builder.show();
+            }else if (BLEService.TYPE_SHOW_CHARACTERISTIC.equals(type)){
+                BluetoothGattCharacteristic characteristic = args.getParcelable(BLEService.EXTRA_CHARACTERISTIC);
+                showCharacteristicValue(characteristic);
+            } else if (BLEService.TYPE_SUCCESS.equals(type)){
+                String msg = args.getString(BLEService.EXTRA_MESSAGE,"msg");
+                alert("Success",msg);
+            } else if (BLEService.TYPE_ERROR.equals(type)){
+                String msg = args.getString(BLEService.EXTRA_MESSAGE,"msg");
+                alert("Error",msg);
             }
         }
+    }
+
+    public void characteristicAction(final BluetoothGattCharacteristic characteristic){
+        AlertDialog.Builder builder=new AlertDialog.Builder(this)
+                .setTitle("Characteristic Action")
+                .setMessage("You want Read or write this characteristic?")
+                .setPositiveButton("Read", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(BLEManager.isCharacteristicReadable(characteristic)) {
+                            readCharacteristic(characteristic);
+                        }
+                        dialog.cancel();
+                    }
+                }).setNeutralButton("Write", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if(BLEManager.isCharacteristicWriteable(characteristic)) {
+                            changeCharacteristicValue(characteristic);
+                        }
+                        dialogInterface.cancel();
+                    }
+                });
+        builder.show();
+    }
+
+    public void showCharacteristicValue(BluetoothGattCharacteristic characteristic){
+        String value = new String(characteristic.getValue());
+        AlertDialog.Builder builder=new AlertDialog.Builder(this)
+                .setTitle("Characteristic Read")
+                .setMessage("You want Read or write this characteristic?")
+                .setPositiveButton("Read", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        builder.show();
     }
 
     public void changeCharacteristicValue(final BluetoothGattCharacteristic characteristic){
@@ -363,8 +410,19 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
         builder.show();
 
-//        DialogFragment dialog = CharacteristicDialog.newInstance(characteristic);
-//        dialog.show(getSupportFragmentManager(), "CharacteristicDialog");
+    }
+
+    public void alert(String title, String msg){
+        AlertDialog.Builder builder=new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(msg)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        builder.show();
     }
 
     private void setFragment(Fragment fragment){
@@ -410,11 +468,16 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
     }
 
-    @Override
     public void modifyCharacteristic(BluetoothGattCharacteristic characteristic, byte[] data) {
         Bundle args = new Bundle();
         args.putByteArray(BLEService.EXTRA_VALUE,data);
         args.putParcelable(BLEService.EXTRA_CHARACTERISTIC,characteristic);
         this.broadcastBLE.sendBroadcast(BLEService.TYPE_WRITE_CHARACTERISTIC,args);
+    }
+
+    public void readCharacteristic(BluetoothGattCharacteristic characteristic){
+        Bundle args = new Bundle();
+        args.putParcelable(BLEService.EXTRA_CHARACTERISTIC,characteristic);
+        this.broadcastBLE.sendBroadcast(BLEService.TYPE_READ_CHARACTERISTIC,args);
     }
 }

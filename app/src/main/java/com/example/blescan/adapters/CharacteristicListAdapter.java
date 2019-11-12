@@ -37,7 +37,7 @@ public class CharacteristicListAdapter extends ArrayAdapter<BluetoothGattCharact
 
         View rowView= inflater.inflate(R.layout.characteristic_list_item, null, true);
 
-        BluetoothGattCharacteristic characteristic = characteristics.get(position);
+        final BluetoothGattCharacteristic characteristic = characteristics.get(position);
         TextView txtTitle = (TextView) rowView.findViewById(R.id.characteristic_list_item_text_view);
         txtTitle.setText(characteristic.getUuid().toString());
 
@@ -52,7 +52,15 @@ public class CharacteristicListAdapter extends ArrayAdapter<BluetoothGattCharact
         }
         txtTitle.setText(perm);
 
-
+        rowView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                String uuid=characteristic.getUuid().toString();
+                Toast.makeText(context,"selected UUID: "+uuid,Toast.LENGTH_LONG).show();
+                mainActivity.characteristicAction(characteristic);
+                return false;
+            }
+        });
 
         return rowView;
     }
