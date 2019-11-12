@@ -24,6 +24,7 @@ import com.example.blescan.broadcast.BroadcastManager;
 import com.example.blescan.broadcast.IBroadcastManagerCaller;
 import com.example.blescan.fragments.CharacteristicFragment;
 import com.example.blescan.fragments.DeviceList;
+import com.example.blescan.fragments.Log;
 import com.example.blescan.fragments.ServicesList;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -182,12 +183,20 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             this.broadcastBLE.sendBroadcast(BLEService.TYPE_STOP_SCAN,null);
             return true;
-        }else if(id == R.id.action_start_service){
+        }else if (id == R.id.action_log){
+            try {
+                Log log = new Log();
+                setFragment(log);
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return true;
+        } else if(id == R.id.action_start_service){
             try {
                 Intent intent = new Intent(getApplicationContext(), BLEService.class);
                 startService(intent);
