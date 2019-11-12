@@ -45,6 +45,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String TYPE_SHOW_CHARACTERISTIC= "com.example.blescan.ble.BLEService.type.TYPE_SHOW_CHARACTERISTIC";
     public static String TYPE_GET_CONNECTION= "com.example.blescan.ble.BLEService.type.TYPE_GET_CONNECTION";
     public static String TYPE_RESPONSE_CONNECTION= "com.example.blescan.ble.BLEService.type.TYPE_RESPONSE_CONNECTION";
+    public static String TYPE_DISCONNECT_DEVICE= "com.example.blescan.ble.BLEService.type.TYPE_DISCONNECT_DEVICE";
 
     public static String TYPE_SUCCESS= "com.example.blescan.ble.BLEService.type.TYPE_SUCCESS";
     public static String TYPE_ERROR= "com.example.blescan.ble.BLEService.type.TYPE_ERROR";
@@ -279,6 +280,8 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
             Bundle b = new Bundle();
             b.putString(EXTRA_ADDRESS,address);
             this.broadcastManager.sendBroadcast(TYPE_RESPONSE_CONNECTION,b);
+        } else if (TYPE_DISCONNECT_DEVICE.equals(type)){
+            bleManager.disconnect();
         }
     }
 

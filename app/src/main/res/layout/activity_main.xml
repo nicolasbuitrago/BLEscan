@@ -20,14 +20,62 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        app:srcCompat="@android:drawable/ic_dialog_email" />-->
 
     <include layout="@layout/content_main" />
+
+    <com.getbase.floatingactionbutton.FloatingActionsMenu
+        android:id="@+id/fabmenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:fab_addButtonColorNormal="@color/colorPrimary"
+        app:fab_addButtonColorPressed="@color/colorPrimaryDark">
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_colorNormal="@color/design_default_color_primary"
+            app:fab_icon="@android:drawable/ic_media_play"
+            app:fab_size="normal"
+            app:fab_title="Start LE scan" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_colorNormal="@color/design_default_color_primary"
+            app:fab_icon="@android:drawable/ic_media_pause"
+            app:fab_size="normal"
+            app:fab_title="Start LE scan" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_colorNormal="@color/design_default_color_primary"
+            app:fab_icon="@android:drawable/ic_lock_idle_charging"
+            app:fab_size="normal"
+            app:fab_title="Start LE scan" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_colorNormal="@color/design_default_color_primary"
+            app:fab_icon="@android:drawable/presence_offline"
+            app:fab_size="normal"
+            app:fab_title="Start LE scan" />
+
+    </com.getbase.floatingactionbutton.FloatingActionsMenu>
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

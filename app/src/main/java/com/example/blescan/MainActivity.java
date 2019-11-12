@@ -27,6 +27,7 @@ import com.example.blescan.fragments.DeviceList;
 import com.example.blescan.fragments.Log;
 import com.example.blescan.fragments.ServicesList;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -73,11 +74,57 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
         fragmentManager = getSupportFragmentManager();
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        /*FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 broadcastBLE.sendBroadcast(BLEService.TYPE_SCAN_DEVICES,null);
+            }
+        });*/
+
+        //FLOATING MENU EVENTS
+        //START SCAN EVENT
+        com.getbase.floatingactionbutton.FloatingActionButton fab1 = findViewById(R.id.fab1);
+        fab1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Starting LE scan", Snackbar.LENGTH_LONG).show();
+                broadcastBLE.sendBroadcast(BLEService.TYPE_SCAN_DEVICES,null);
+            }
+        });
+
+        //STOP SCAN EVENT
+        com.getbase.floatingactionbutton.FloatingActionButton fab2 = findViewById(R.id.fab2);
+        fab2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Stopping LE scan", Snackbar.LENGTH_LONG).show();
+                broadcastBLE.sendBroadcast(BLEService.TYPE_STOP_SCAN,null);
+            }
+
+        });
+
+        //CONECT EVENT, CONNECT TO THE LAST SELECTED ITEM
+        com.getbase.floatingactionbutton.FloatingActionButton fab3 = findViewById(R.id.fab3);
+        fab3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                ScDevice selectedItem = (ScDevice) listView.getItemAtPosition(anterior);
+                Snackbar.make(view, "Connecting to ", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+//                Toast.makeText(getApplicationContext(),"Connecting to: " + selectedItem.Name, Toast.LENGTH_LONG).show();
+//                if(connect()){
+//                    //log
+//                }
+            }
+        });
+
+        //DISCONECTION EVENT
+        com.getbase.floatingactionbutton.FloatingActionButton fab4 = findViewById(R.id.fab4);
+        fab4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                broadcastBLE.sendBroadcast(BLEService.TYPE_DISCONNECT_DEVICE,null);
             }
         });
 
@@ -384,12 +431,21 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if(fragment instanceof ServicesList){
+
+        }
+        super.onBackPressed();
+    }
+
     private void connectedGatt(){
         this.servicesList = ServicesList.newInstance(address);
 //        setFragment(servicesList);
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.hide(devicesFragment);
         transaction.add(R.id.fragment_container,servicesList,TAG_SERVICES);
+        fragment = servicesList;
         transaction.commit();
         transaction.addToBackStack("b1");
     }

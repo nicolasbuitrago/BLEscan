@@ -321,6 +321,10 @@ public class BLEManager extends ScanCallback {
         }
     }
 
+    void disconnect(){
+        this.lastBluetoothGatt.disconnect();
+    }
+
     public static boolean isCharacteristicWriteable(BluetoothGattCharacteristic characteristic) {
         return (characteristic.getProperties() &
                 (BluetoothGattCharacteristic.PROPERTY_WRITE | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) != 0;
