@@ -33,7 +33,7 @@ public class BLEManager extends ScanCallback {
 
     private IBLEManagerCaller caller;
     private Context context;
-    private LogBLE log;
+//    private LogBLE log;
 
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
@@ -49,7 +49,7 @@ public class BLEManager extends ScanCallback {
         this.caller = caller;
         this.context = context;
         this.scanResults=new ArrayList<>();
-        this.log = LogBLE.getInstance();
+//        this.log = LogBLE.getInstance();
         initializeBluetoothManager();
     }
 
@@ -76,7 +76,7 @@ public class BLEManager extends ScanCallback {
         try {
             return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
         }catch (Exception error){
-            LogBLE.getInstance().add(TAG, LogBLE.ERROR+error.getMessage());
+            LogBLE.getInstance().error(TAG, "CheckIfBLEIsSupportedOrNot. "+error.getMessage());
         }
         return false;
     }
@@ -103,7 +103,7 @@ public class BLEManager extends ScanCallback {
                 return true;
             }
         }catch (Exception error){
-            LogBLE.getInstance().add(TAG,"RequestBluetoothDeviceEnable. "+error.getMessage());
+            LogBLE.getInstance().error(TAG,"RequestBluetoothDeviceEnable. "+error.getMessage());
         }
         return false;
     }
@@ -150,7 +150,7 @@ public class BLEManager extends ScanCallback {
 
             }
         }catch (Exception error){
-            LogBLE.getInstance().add(TAG,"requestLocationPermissions. "+error.getMessage());
+            LogBLE.getInstance().error(TAG,"requestLocationPermissions. "+error.getMessage());
         }
 
     }
@@ -367,6 +367,7 @@ public class BLEManager extends ScanCallback {
                         }
                     }
                 }
+                caller.log(TAG, "searchAndSetAllNotifyAbleCharacteristics.");
             }
         } catch (Exception error){
             /*for (BluetoothHelperCallerInterface current:callers

@@ -6,6 +6,7 @@ public class LogBLE {
 
     private static LogBLE mInstance;
     private ArrayList<String> log;
+//    private ArrayAdapter<String> adapter;
 
     private LogBLE() {
         this.log = new ArrayList<>();
@@ -18,16 +19,18 @@ public class LogBLE {
         return mInstance;
     }
 
-    public void add(String msg){
-        this.log.add(msg);
-    }
-
     public void add(String tag, String msg){
         this.log.add(tag+": "+msg);
+//        this.adapter.notifyDataSetChanged();
     }
 
     public void error(String tag, String msg){
-        this.log.add("Error / "+tag+": "+msg);
+        this.log.add("E / "+tag+": "+msg);
+//        this.adapter.notifyDataSetChanged();
+    }
+
+    public ArrayList<String> getLogs(){
+        return log;
     }
 
     public static String ERROR = "Error BLE: ";

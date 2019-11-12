@@ -104,7 +104,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
                 .build();
 
         startForeground(ID_SERVICE, notification);
-        
+        this.log.add(TAG,"Service started");
         this.channelId = createChannel(notificationManager);
     }
 
@@ -154,7 +154,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         if(broadcastManager!=null){
             broadcastManager.unRegister();
         }
-
+        this.log.add(TAG,"Service finished");
         super.onDestroy();
     }
 
@@ -178,6 +178,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         Bundle args = new Bundle();
         args.putParcelableArrayList(EXTRA_DEVICES,bleManager.scanResults);
         this.broadcastManager.sendBroadcast(TYPE_NEW_DEVICE,args);
+        this.log.add(TAG,"New device detected.");
     }
 
     @Override
@@ -185,11 +186,13 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         Bundle args = new Bundle();
         args.putString(EXTRA_ADDRESS,address);
         this.broadcastManager.sendBroadcast(TYPE_CONNECTED_GATT,args);
+        this.log.add(TAG,"Connected to GATT server with address: "+address+".");
     }
 
     @Override
     public void disconnectedGATT() {
         this.broadcastManager.sendBroadcast(TYPE_DISCONNECTED_GATT,null);
+        this.log.add(TAG,"Disconnected GATT server.");
     }
 
     @Override
@@ -198,6 +201,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         args.putString(EXTRA_ADDRESS,this.bleManager.getAddress());
         args.putParcelableArrayList(EXTRA_SERVICES,services);
         this.broadcastManager.sendBroadcast(TYPE_DISCOVERED_SERVICES,args);
+        this.log.add(TAG,"Discovered services.");
     }
 
     @Override
@@ -225,6 +229,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         Bundle args = new Bundle();
         args.putParcelable(EXTRA_CHARACTERISTIC,characteristic);
         this.broadcastManager.sendBroadcast(TYPE_CHARACTERISTIC_CHANGED,args);
+        this.log.add(TAG,"Characteristic with UUID: "+characteristic.getUuid().toString() +" changed.");
     }
 
     @Override
@@ -248,11 +253,14 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public void MessageReceivedThroughBroadcastManager(String channel, String type, Bundle args) {
         if(TYPE_SCAN_DEVICES.equals(type)){
             this.bleManager.scanDevices();
+            this.log.add(TAG,"Scan started.");
         }else if(TYPE_STOP_SCAN.equals(type)){
             this.bleManager.stopScan();
+            this.log.add(TAG,"Scan stopped.");
         } else if(TYPE_CONNECT_GATT.equals(type)){
             String address = args.getString(EXTRA_ADDRESS);
             this.bleManager.connectToGATTServer(this.bleManager.getByAddress(address));
+            this.log.add(TAG,"Connecting to GATT server with address: "+address+".");
         } else if (TYPE_SEND_CHARACTERISTICS.equals(type)){
             //ArrayList<BluetoothGattCharacteristic> characteristics = args.getParcelableArrayList(EXTRA_CHARACTERISTICS);
             this.broadcastManager.sendBroadcast(TYPE_SHOW_CHARACTERISTICS, args);
@@ -264,6 +272,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
                 Bundle bundle = new Bundle();
                 bundle.putString(EXTRA_MESSAGE,"Error writing characteristic.");
                 this.broadcastManager.sendBroadcast(TYPE_ERROR,bundle);
+                this.log.error(TAG, "Writing the characteristic with UUID: "+characteristic.getUuid().toString() +" changed.");
             }
         }else if (TYPE_READ_CHARACTERISTIC.equals(type)){
             BluetoothGattCharacteristic characteristic = args.getParcelable(EXTRA_CHARACTERISTIC);
@@ -272,6 +281,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
                 Bundle bundle = new Bundle();
                 bundle.putString(EXTRA_MESSAGE,"Error reading characteristic.");
                 this.broadcastManager.sendBroadcast(TYPE_ERROR,bundle);
+                this.log.error(TAG, "Reading the characteristic with UUID: "+characteristic.getUuid().toString() +" changed.");
             }
         } else if(TYPE_DISCOVER_SERVICES.equals(type)){
             this.bleManager.discoverServices();
