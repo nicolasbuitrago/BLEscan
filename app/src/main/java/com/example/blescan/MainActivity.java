@@ -212,6 +212,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 bluetoothEnabled = false;
                 bluetoothStatusTextView.setText(R.string.status_offline);
                 bluetoothStatusTextView.setTextColor(getResources().getColor(R.color.red));
+                BLEManager.RequestBluetoothDeviceEnable(this);
                 break;
             case BluetoothAdapter.STATE_TURNING_OFF:
                 bluetoothStatusTextView.setText(R.string.status_turning_off);
@@ -312,6 +313,8 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 if(resultCode== Activity.RESULT_OK){
                     //setBluetoothStatus(true);
                     BLEManager.requestLocationPermissions(this,getApplicationContext());
+                }else{
+                    finish();
                 }
             }
         }catch (Exception error){
