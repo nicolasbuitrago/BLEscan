@@ -43,6 +43,8 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public static String TYPE_WRITE_CHARACTERISTIC= "com.example.blescan.ble.BLEService.type.TYPE_WRITE_CHARACTERISTIC";
     public static String TYPE_READ_CHARACTERISTIC= "com.example.blescan.ble.BLEService.type.TYPE_READ_CHARACTERISTIC";
     public static String TYPE_SHOW_CHARACTERISTIC= "com.example.blescan.ble.BLEService.type.TYPE_SHOW_CHARACTERISTIC";
+    public static String TYPE_GET_CONNECTION= "com.example.blescan.ble.BLEService.type.TYPE_GET_CONNECTION";
+    public static String TYPE_RESPONSE_CONNECTION= "com.example.blescan.ble.BLEService.type.TYPE_RESPONSE_CONNECTION";
 
     public static String TYPE_SUCCESS= "com.example.blescan.ble.BLEService.type.TYPE_SUCCESS";
     public static String TYPE_ERROR= "com.example.blescan.ble.BLEService.type.TYPE_ERROR";
@@ -192,6 +194,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     @Override
     public void discoveredServices(ArrayList<BluetoothGattService> services) {
         Bundle args = new Bundle();
+        args.putString(EXTRA_ADDRESS,this.bleManager.getAddress());
         args.putParcelableArrayList(EXTRA_SERVICES,services);
         this.broadcastManager.sendBroadcast(TYPE_DISCOVERED_SERVICES,args);
     }
@@ -269,10 +272,14 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
                 bundle.putString(EXTRA_MESSAGE,"Error reading characteristic.");
                 this.broadcastManager.sendBroadcast(TYPE_ERROR,bundle);
             }
-        }
-        /*else if(TYPE_DISCOVER_SERVICES.equals(type)){
+        } else if(TYPE_DISCOVER_SERVICES.equals(type)){
             this.bleManager.discoverServices();
-        }*/
+        } else if(TYPE_GET_CONNECTION.equals(type)){
+            String address = this.bleManager.getAddress();
+            Bundle b = new Bundle();
+            b.putString(EXTRA_ADDRESS,address);
+            this.broadcastManager.sendBroadcast(TYPE_RESPONSE_CONNECTION,b);
+        }
     }
 
     @Override

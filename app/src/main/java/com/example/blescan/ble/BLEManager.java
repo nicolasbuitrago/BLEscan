@@ -175,6 +175,13 @@ public class BLEManager extends ScanCallback {
         }
     }
 
+    String getAddress(){
+        if(lastBluetoothGatt!=null){
+            return lastBluetoothGatt.getDevice().getAddress();
+        }
+        return null;
+    }
+
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
         if(result != null) {

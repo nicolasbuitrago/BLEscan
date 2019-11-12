@@ -53,10 +53,16 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     private BroadcastReceiver bluetoothReceiver;
     private boolean bluetoothEnabled;
     private TextView bluetoothStatusTextView;
+    private FragmentManager fragmentManager;
+    private Fragment fragment;
     private DeviceList devicesFragment;
     private ServicesList servicesList;
-    private String address;
     private CharacteristicFragment characteristicFragment;
+    private String address;
+
+    private static final String TAG_DEVICES ="devices";
+    private static final String TAG_SERVICES ="services";
+    private static final String TAG_CHARACTERISTIC ="characteristics";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        fragmentManager = getSupportFragmentManager();
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -95,12 +103,16 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
         devicesFragment = new DeviceList();
         servicesList = new ServicesList();
-        fragmentTransaction.add(R.id.fragment_container, devicesFragment);
+        //characteristicFragment =
+        fragmentTransaction.add(R.id.fragment_container, devicesFragment, TAG_DEVICES);
         fragmentTransaction.commit();
 
         mainActivity=this;
         initializeBroadcastManager();
         initializeBluetoothReceiver();
+
+        this.broadcastBLE.sendBroadcast(BLEService.TYPE_GET_CONNECTION,null);
+
     }
 
     public void initializeBroadcastManager(){
@@ -294,27 +306,37 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             } else if(BLEService.TYPE_CONNECTED_GATT.equals(type)){
                 Toast.makeText(this,"Connected",Toast.LENGTH_LONG).show();
                 String address = args.getString(BLEService.EXTRA_ADDRESS);
-                setFragment(ServicesList.newInstance(address));
                 this.address=address;
+                connectedGatt();
+
                 //this.broadcastBLE.sendBroadcast(BLEService.TYPE_DISCOVER_SERVICES,null);
             } else if(BLEService.TYPE_DISCONNECTED_GATT.equals(type)){
                 Toast.makeText(this,"Disconnected",Toast.LENGTH_LONG).show();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.show(devicesFragment);
+                transaction.remove(servicesList);
+                transaction.commit();
+                address=null;
             } else if (BLEService.TYPE_DISCOVERED_SERVICES.equals(type)){
                 final ArrayList<BluetoothGattService> services = args.getParcelableArrayList(BLEService.EXTRA_SERVICES);
-                this.characteristicFragment = CharacteristicFragment.newInstance(address);
+                String a = args.getString(BLEService.EXTRA_ADDRESS);
+                if(a!=null) {
+                    this.address = a;
+                    this.characteristicFragment = CharacteristicFragment.newInstance(a);
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try{
-                            ListView listView=(ListView)findViewById(R.id.services_list_id);
-                            ServiceListAdapter adapter=new ServiceListAdapter(getApplicationContext(),services, mainActivity);
-                            listView.setAdapter(adapter);
-                        }catch (Exception error){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                ListView listView = (ListView) findViewById(R.id.services_list_id);
+                                ServiceListAdapter adapter = new ServiceListAdapter(getApplicationContext(), services, mainActivity);
+                                listView.setAdapter(adapter);
+                            } catch (Exception error) {
 
+                            }
                         }
-                    }
-                });
+                    });
+                }
             } else if(BLEService.TYPE_SHOW_CHARACTERISTICS.equals(type)){
                 final ArrayList<BluetoothGattCharacteristic> characteristics = args.getParcelableArrayList(BLEService.EXTRA_CHARACTERISTICS);
                 runOnUiThread(new Runnable() {
@@ -345,7 +367,14 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             }else if (BLEService.TYPE_SHOW_CHARACTERISTIC.equals(type)){
                 BluetoothGattCharacteristic characteristic = args.getParcelable(BLEService.EXTRA_CHARACTERISTIC);
                 showCharacteristicValue(characteristic);
-            } else if (BLEService.TYPE_SUCCESS.equals(type)){
+            }else if (BLEService.TYPE_RESPONSE_CONNECTION.equals(type)){
+                this.address = args.getString(BLEService.EXTRA_ADDRESS);
+                if(this.address!=null) {
+                    connectedGatt();
+                    this.broadcastBLE.sendBroadcast(BLEService.TYPE_DISCOVER_SERVICES,null);
+                }
+            }
+            else if (BLEService.TYPE_SUCCESS.equals(type)){
                 String msg = args.getString(BLEService.EXTRA_MESSAGE,"msg");
                 alert("Success",msg);
             } else if (BLEService.TYPE_ERROR.equals(type)){
@@ -353,6 +382,16 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 alert("Error",msg);
             }
         }
+    }
+
+    private void connectedGatt(){
+        this.servicesList = ServicesList.newInstance(address);
+//        setFragment(servicesList);
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.hide(devicesFragment);
+        transaction.add(R.id.fragment_container,servicesList,TAG_SERVICES);
+        transaction.commit();
+        transaction.addToBackStack("b1");
     }
 
     public void characteristicAction(final BluetoothGattCharacteristic characteristic){
@@ -435,11 +474,10 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     }
 
     private void setFragment(Fragment fragment){
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
 
-        fragmentTransaction.replace(R.id.fragment_container, fragment);
-        fragmentTransaction.commit();
+        transaction.replace(R.id.fragment_container, fragment);
+        transaction.commit();
     }
 
     @Override
