@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     private DeviceList devicesFragment;
     private ServicesList servicesList;
     private CharacteristicFragment characteristicFragment;
+    private Log logFragment;
     private String address;
     private ArrayList<ScanResult> oldScans;
     private BluetoothListAdapter adapter;
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
         try {
             Intent intent = new Intent(getApplicationContext(), BLEService.class);
-            startService(intent);
+            startForegroundService(intent);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -162,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         //characteristicFragment =
         fragmentTransaction.add(R.id.fragment_container, devicesFragment, TAG_DEVICES);
         fragmentTransaction.commit();
+        fragment = devicesFragment;
 
         mainActivity=this;
         initializeBroadcastManager();
@@ -171,7 +173,12 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
 
         this.broadcastBLE.sendBroadcast(BLEService.TYPE_GET_CONNECTION,null);
-
+        try {
+            Intent intent = new Intent(getApplicationContext(), BLEService.class);
+            startService(intent);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public void initializeBroadcastManager(){
@@ -261,12 +268,12 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             return true;
         }else if (id == R.id.action_log){
             try {
-                Log log = new Log();
+                logFragment = new Log();
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 transaction.hide(fragment);
-                transaction.add(R.id.fragment_container,log);
+                transaction.add(R.id.fragment_container, logFragment);
                 transaction.commit();
-                fragment = log;
+                //fragment = log;
                 transaction.addToBackStack("l");
 
             }catch (Exception e){
@@ -436,10 +443,11 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 });
             } else if(BLEService.TYPE_CHARACTERISTIC_CHANGED.equals(type)){
                 final BluetoothGattCharacteristic characteristic = args.getParcelable(BLEService.EXTRA_CHARACTERISTIC);
+                String value = args.getString(BLEService.EXTRA_VALUE);
                 AlertDialog.Builder builder=new AlertDialog.Builder(this)
                         .setTitle("Characteristic changed")
                         .setMessage("Value of characteristic with UUID: "+characteristic.getUuid().toString()
-                                +" changed.")
+                                +" changed. Value = "+value)
                         .setNeutralButton("Ok", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
@@ -468,9 +476,12 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         }
     }
 
-  /*  @Override
+    @Override
     public void onBackPressed() {
-        if(fragment instanceof ServicesList){
+        if(logFragment!=null){
+            fragmentManager.beginTransaction().remove(logFragment).show(fragment).commit();
+            logFragment=null;
+        }else if(fragment instanceof ServicesList){
             fragmentManager.beginTransaction().remove(servicesList).show(devicesFragment).commit();
             fragment = devicesFragment;
         } else if(fragment instanceof CharacteristicFragment){
@@ -478,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             fragment= servicesList;
         }
         super.onBackPressed();
-    }*/
+    }
 
     private void connectedGatt(){
         this.servicesList = ServicesList.newInstance(address);

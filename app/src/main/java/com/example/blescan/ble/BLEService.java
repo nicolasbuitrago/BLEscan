@@ -144,9 +144,9 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent, flags, startId);
+        return super.onStartCommand(intent, flags, startId);
 
-        return START_STICKY;
+        //return START_STICKY;
     }
 
     @Override
@@ -228,6 +228,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
         notificationManager.notify(ID_NOTIFICATION++,notification);
         Bundle args = new Bundle();
         args.putParcelable(EXTRA_CHARACTERISTIC,characteristic);
+        args.putString(EXTRA_VALUE,BLEManager.byteArrayToHexString(characteristic.getValue()));
         this.broadcastManager.sendBroadcast(TYPE_CHARACTERISTIC_CHANGED,args);
         this.log.add(TAG,"Characteristic with UUID: "+characteristic.getUuid().toString() +" changed.");
     }
