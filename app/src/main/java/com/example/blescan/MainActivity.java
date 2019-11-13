@@ -262,7 +262,12 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         }else if (id == R.id.action_log){
             try {
                 Log log = new Log();
-                setFragment(log);
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.hide(fragment);
+                transaction.add(R.id.fragment_container,log);
+                transaction.commit();
+                fragment = log;
+                transaction.addToBackStack("l");
 
             }catch (Exception e){
                 e.printStackTrace();
@@ -341,7 +346,14 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     }
 
     public void showCharacteristics(BluetoothGattService service) {
-        setFragment(characteristicFragment);
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.hide(servicesList);
+        transaction.add(R.id.fragment_container,characteristicFragment,TAG_CHARACTERISTIC);
+        fragment = characteristicFragment;
+        transaction.commit();
+        transaction.addToBackStack("ch");
+
+        //setFragment(characteristicFragment);
         final ArrayList<BluetoothGattCharacteristic> characteristics = new ArrayList<>(service.getCharacteristics());
         Bundle args = new Bundle();
         args.putParcelableArrayList(BLEService.EXTRA_CHARACTERISTICS,characteristics);
@@ -379,9 +391,13 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 //this.broadcastBLE.sendBroadcast(BLEService.TYPE_DISCOVER_SERVICES,null);
             } else if(BLEService.TYPE_DISCONNECTED_GATT.equals(type)){
                 Toast.makeText(this,"Disconnected",Toast.LENGTH_LONG).show();
+                if(fragment instanceof CharacteristicFragment){
+                    fragmentManager.beginTransaction().remove(characteristicFragment).commit();
+                }
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 transaction.show(devicesFragment);
                 transaction.remove(servicesList);
+
                 transaction.commit();
                 address=null;
             } else if (BLEService.TYPE_DISCOVERED_SERVICES.equals(type)){
@@ -455,7 +471,11 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     @Override
     public void onBackPressed() {
         if(fragment instanceof ServicesList){
-
+            fragmentManager.beginTransaction().remove(servicesList).show(devicesFragment).commit();
+            fragment = devicesFragment;
+        } else if(fragment instanceof CharacteristicFragment){
+            fragmentManager.beginTransaction().remove(characteristicFragment).show(servicesList).commit();
+            fragment= servicesList;
         }
         super.onBackPressed();
     }
