@@ -274,6 +274,8 @@ public class BLEManager extends ScanCallback {
                     super.onCharacteristicRead(gatt, characteristic, status);
                     if (status == BluetoothGatt.GATT_SUCCESS) {
                         caller.showCharacteristic(characteristic);
+                    }else{
+                        caller.errorUI("Error reading.");
                     }
                 }
 
@@ -282,6 +284,8 @@ public class BLEManager extends ScanCallback {
                     super.onCharacteristicWrite(gatt, characteristic, status);
                     if (status == BluetoothGatt.GATT_SUCCESS) {
                         caller.showCharacteristic(characteristic);
+                    }else{
+                        caller.errorUI("Error writing.");
                     }
                 }
 

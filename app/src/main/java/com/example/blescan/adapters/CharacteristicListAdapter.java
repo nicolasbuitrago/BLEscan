@@ -84,7 +84,7 @@ public class CharacteristicListAdapter extends ArrayAdapter<BluetoothGattCharact
         }else if(n){
             return "N";
         }else{
-            return "0";
+            return "-";
         }
     }
 }
