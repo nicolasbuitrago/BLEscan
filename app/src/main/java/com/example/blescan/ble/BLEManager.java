@@ -395,8 +395,7 @@ public class BLEManager extends ScanCallback {
         int len = s.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i + 1), 16));
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
     }
@@ -419,8 +418,9 @@ public class BLEManager extends ScanCallback {
     public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic,byte[] data){
         try{
             if(characteristic==null) return false;
-            characteristic.setValue(data);
-            return lastBluetoothGatt.writeCharacteristic(characteristic);
+            BluetoothGattCharacteristic ch = getCharacteristic(characteristic);
+            ch.setValue(data);
+            return lastBluetoothGatt.writeCharacteristic(ch);
         }catch (Exception error){
 
             /*for (BluetoothHelperCallerInterface current:callers

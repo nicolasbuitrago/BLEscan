@@ -480,7 +480,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
 
     public void showCharacteristicValue(BluetoothGattCharacteristic characteristic, String value){
         AlertDialog.Builder builder=new AlertDialog.Builder(this)
-                .setTitle("Characteristic Read")
+                .setTitle("Characteristic Value")
                 .setMessage(value)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
@@ -505,6 +505,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String v = input.getText().toString();
+                //byte[] data = BLEManager.hexStringToByteArray(v);
                 modifyCharacteristic(characteristic,v.getBytes());
             }
         });
