@@ -404,6 +404,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 FragmentTransaction transaction = fragmentManager.beginTransaction();
                 transaction.show(devicesFragment);
                 transaction.remove(servicesList);
+                fragment = devicesFragment;
 
                 transaction.commit();
                 address=null;
@@ -511,6 +512,8 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                     public void onClick(DialogInterface dialog, int which) {
                         if(BLEManager.isCharacteristicReadable(characteristic)) {
                             readCharacteristic(characteristic);
+                        } else{
+                            alert("Error", "Access denied.  Reading permissions required");
                         }
                         dialog.cancel();
                     }
@@ -519,6 +522,8 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                     public void onClick(DialogInterface dialogInterface, int i) {
                         if(BLEManager.isCharacteristicWriteable(characteristic)) {
                             changeCharacteristicValue(characteristic);
+                        }else{
+                            alert("Error", "Access denied. Writing permissions required");
                         }
                         dialogInterface.cancel();
                     }
