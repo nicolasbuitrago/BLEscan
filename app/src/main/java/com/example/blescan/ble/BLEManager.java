@@ -40,7 +40,7 @@ public class BLEManager extends ScanCallback {
     private BluetoothLeScanner bluetoothLeScanner;
     public ArrayList<ScanResult> scanResults;
 
-    public static String TAG = BLEManager.class.getName();
+    public static String TAG = "BLEManager";
     public static int REQUEST_BLUETOOTH_PERMISSION_NEEDED = 1027;
     public static int REQUEST_LOCATION_PERMISSION_NEEDED = 1028;
     private BluetoothGatt lastBluetoothGatt;
@@ -315,7 +315,7 @@ public class BLEManager extends ScanCallback {
                 public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
                     super.onMtuChanged(gatt, mtu, status);
                 }
-            });
+            },BluetoothDevice.TRANSPORT_LE);
         }catch (Exception error){
             caller.error(TAG,LogBLE.ERROR+error.getMessage());
         }
@@ -382,6 +382,7 @@ public class BLEManager extends ScanCallback {
     public boolean readCharacteristic(BluetoothGattCharacteristic characteristic){
         try{
             if(characteristic==null) return false;
+
             return lastBluetoothGatt.readCharacteristic(characteristic);
         }catch (Exception error){
             /*for (BluetoothHelperCallerInterface current:callers

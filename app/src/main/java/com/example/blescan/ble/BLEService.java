@@ -24,7 +24,7 @@ import java.util.ArrayList;
 
 public class BLEService extends Service implements IBLEManagerCaller, IBroadcastManagerCaller {
 
-    public static String TAG = BLEService.class.getName();
+    public static String TAG = "BLEService";
 
     public static String CHANNEL = "com.example.blescan.ble.BLEService";
 
@@ -297,6 +297,6 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
 
     @Override
     public void ErrorAtBroadcastManager(Exception error) {
-        this.log.add(TAG,"ErrorAtBroadcastManager. "+error.getMessage());
+        this.log.error(TAG,"ErrorAtBroadcastManager. "+error.getMessage());
     }
 }
