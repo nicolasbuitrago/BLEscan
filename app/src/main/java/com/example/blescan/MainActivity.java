@@ -468,7 +468,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         }
     }
 
-    @Override
+  /*  @Override
     public void onBackPressed() {
         if(fragment instanceof ServicesList){
             fragmentManager.beginTransaction().remove(servicesList).show(devicesFragment).commit();
@@ -478,7 +478,7 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
             fragment= servicesList;
         }
         super.onBackPressed();
-    }
+    }*/
 
     private void connectedGatt(){
         this.servicesList = ServicesList.newInstance(address);
@@ -570,12 +570,12 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         builder.show();
     }
 
-    private void setFragment(Fragment fragment){
+    /*private void setFragment(Fragment fragment){
         FragmentTransaction transaction = fragmentManager.beginTransaction();
 
         transaction.replace(R.id.fragment_container, fragment);
         transaction.commit();
-    }
+    }*/
 
     @Override
     public void ErrorAtBroadcastManager(final Exception error) {
