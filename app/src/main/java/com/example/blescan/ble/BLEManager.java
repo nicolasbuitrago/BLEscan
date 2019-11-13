@@ -379,11 +379,33 @@ public class BLEManager extends ScanCallback {
 
     }
 
+    public static String byteArrayToHexString(byte[] data) {
+        String s = "";
+        if (data != null && data.length > 0) {
+            final StringBuilder stringBuilder = new StringBuilder(data.length);
+            for (byte byteChar : data)
+                stringBuilder.append(String.format("%02X ", byteChar));
+            s = new String(data) + "\n" +
+                    stringBuilder.toString();
+        }
+        return s;
+    }
+
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
+    }
+
     public boolean readCharacteristic(BluetoothGattCharacteristic characteristic){
         try{
             if(characteristic==null) return false;
 
-            return lastBluetoothGatt.readCharacteristic(characteristic);
+            return lastBluetoothGatt.readCharacteristic(getCharacteristic(characteristic));
         }catch (Exception error){
             /*for (BluetoothHelperCallerInterface current:callers
             ) {
@@ -409,4 +431,31 @@ public class BLEManager extends ScanCallback {
         }
         return false;
     }
+
+    private BluetoothGattCharacteristic getCharacteristic(BluetoothGattCharacteristic c){
+        for (BluetoothGattService service : this.lastBluetoothGatt.getServices()) {
+//            if(c.getService().getUuid().equals(service.getUuid())) {
+                for (BluetoothGattCharacteristic ch : service.getCharacteristics()) {
+                    if (ch.getUuid().equals(c.getUuid())) {
+                        return ch;
+                    }
+                }
+//            }
+        }
+        return null;
+    }
+
+    /*public void processCommand() {
+        if (commandQueue.size() == 0) {
+            return;
+        }
+        BluetoothGattCharacteristic currentCharacteristic = commandQueue.poll();
+        lastBluetoothGatt.setCharacteristicNotification(currentCharacteristic, true);
+        currentCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+        BluetoothGattDescriptor descriptor = currentCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID);
+        if (descriptor != null) {
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            lastBluetoothGatt.writeDescriptor(descriptor);
+        }
+    }*/
 }

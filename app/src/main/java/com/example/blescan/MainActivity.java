@@ -416,7 +416,8 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                 builder.show();
             }else if (BLEService.TYPE_SHOW_CHARACTERISTIC.equals(type)){
                 BluetoothGattCharacteristic characteristic = args.getParcelable(BLEService.EXTRA_CHARACTERISTIC);
-                showCharacteristicValue(characteristic);
+                String value = args.getString(BLEService.EXTRA_VALUE);
+                showCharacteristicValue(characteristic,value);
             }else if (BLEService.TYPE_RESPONSE_CONNECTION.equals(type)){
                 this.address = args.getString(BLEService.EXTRA_ADDRESS);
                 if(this.address!=null) {
@@ -477,12 +478,11 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         builder.show();
     }
 
-    public void showCharacteristicValue(BluetoothGattCharacteristic characteristic){
-        String value = new String(characteristic.getValue());
+    public void showCharacteristicValue(BluetoothGattCharacteristic characteristic, String value){
         AlertDialog.Builder builder=new AlertDialog.Builder(this)
                 .setTitle("Characteristic Read")
-                .setMessage("You want Read or write this characteristic?")
-                .setPositiveButton("Read", new DialogInterface.OnClickListener() {
+                .setMessage(value)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();

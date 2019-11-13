@@ -236,6 +236,7 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     public void showCharacteristic(BluetoothGattCharacteristic characteristic) {
         Bundle args = new Bundle();
         args.putParcelable(EXTRA_CHARACTERISTIC,characteristic);
+        args.putString(EXTRA_VALUE,BLEManager.byteArrayToHexString(characteristic.getValue()));
         this.broadcastManager.sendBroadcast(TYPE_SHOW_CHARACTERISTIC,args);
     }
 
