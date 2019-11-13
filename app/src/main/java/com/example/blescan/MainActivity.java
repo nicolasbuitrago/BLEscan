@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
     private ServicesList servicesList;
     private CharacteristicFragment characteristicFragment;
     private String address;
+    private ArrayList<ScanResult> oldScans;
+    private BluetoothListAdapter adapter;
 
     private static final String TAG_DEVICES ="devices";
     private static final String TAG_SERVICES ="services";
@@ -71,6 +73,13 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        try {
+            Intent intent = new Intent(getApplicationContext(), BLEService.class);
+            startService(intent);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
         fragmentManager = getSupportFragmentManager();
 
@@ -157,6 +166,9 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
         mainActivity=this;
         initializeBroadcastManager();
         initializeBluetoothReceiver();
+
+        oldScans = new ArrayList<>();
+
 
         this.broadcastBLE.sendBroadcast(BLEService.TYPE_GET_CONNECTION,null);
 
@@ -345,9 +357,14 @@ public class MainActivity extends AppCompatActivity implements IBroadcastManager
                     @Override
                     public void run() {
                         try{
-                            ListView listView=(ListView)findViewById(R.id.devices_list_id);
-                            BluetoothListAdapter adapter=new BluetoothListAdapter(getApplicationContext(),scanResults, mainActivity);
-                            listView.setAdapter(adapter);
+                            if(adapter==null){
+                                ListView listView = (ListView) findViewById(R.id.devices_list_id);
+                                adapter = new BluetoothListAdapter(getApplicationContext(), oldScans, mainActivity);
+                                listView.setAdapter(adapter);
+                            }
+                            oldScans.clear();
+                            oldScans.addAll(scanResults);
+                            adapter.notifyDataSetChanged();
                         }catch (Exception error){
 
                         }

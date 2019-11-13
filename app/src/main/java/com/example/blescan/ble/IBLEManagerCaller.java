@@ -18,5 +18,6 @@ public interface IBLEManagerCaller {
     void showCharacteristic(BluetoothGattCharacteristic characteristic);
     void log(String tag, String msg);
     void error(String tag, String msg);
+    void errorUI(String msg);
 
 }

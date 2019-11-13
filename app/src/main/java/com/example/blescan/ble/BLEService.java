@@ -251,6 +251,13 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
     }
 
     @Override
+    public void errorUI(String msg) {
+        Bundle bundle = new Bundle();
+        bundle.putString(EXTRA_MESSAGE,msg);
+        this.broadcastManager.sendBroadcast(TYPE_ERROR,bundle);
+    }
+
+    @Override
     public void MessageReceivedThroughBroadcastManager(String channel, String type, Bundle args) {
         if(TYPE_SCAN_DEVICES.equals(type)){
             this.bleManager.scanDevices();
@@ -270,18 +277,14 @@ public class BLEService extends Service implements IBLEManagerCaller, IBroadcast
             byte[] data = args.getByteArray(EXTRA_VALUE);
             boolean r = bleManager.writeCharacteristic(characteristic,data);
             if(!r){
-                Bundle bundle = new Bundle();
-                bundle.putString(EXTRA_MESSAGE,"Error writing characteristic.");
-                this.broadcastManager.sendBroadcast(TYPE_ERROR,bundle);
+                errorUI("Error writing characteristic.");
                 this.log.error(TAG, "Writing the characteristic with UUID: "+characteristic.getUuid().toString() +" changed.");
             }
         }else if (TYPE_READ_CHARACTERISTIC.equals(type)){
             BluetoothGattCharacteristic characteristic = args.getParcelable(EXTRA_CHARACTERISTIC);
             boolean r = bleManager.readCharacteristic(characteristic);
             if(!r){
-                Bundle bundle = new Bundle();
-                bundle.putString(EXTRA_MESSAGE,"Error reading characteristic.");
-                this.broadcastManager.sendBroadcast(TYPE_ERROR,bundle);
+                errorUI("Error reading characteristic.");
                 this.log.error(TAG, "Reading the characteristic with UUID: "+characteristic.getUuid().toString() +" changed.");
             }
         } else if(TYPE_DISCOVER_SERVICES.equals(type)){

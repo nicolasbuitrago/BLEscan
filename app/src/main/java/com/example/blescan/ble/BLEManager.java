@@ -322,7 +322,11 @@ public class BLEManager extends ScanCallback {
     }
 
     void disconnect(){
-        this.lastBluetoothGatt.disconnect();
+        if(lastBluetoothGatt!=null) {
+            this.lastBluetoothGatt.disconnect();
+        }else{
+            caller.errorUI("Connection doesn't exist");
+        }
     }
 
     public static boolean isCharacteristicWriteable(BluetoothGattCharacteristic characteristic) {
